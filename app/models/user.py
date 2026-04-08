@@ -1,4 +1,4 @@
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Optional   
 from typing import Optional
 from pydantic import EmailStr
 
@@ -11,3 +11,7 @@ class UserBase(SQLModel,):
 
 class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    weight: Optional[float] = None
+    height: Optional[float] = None
+    body_fat_percentage: Optional[float] = None
+    age: Optional[int] = None
