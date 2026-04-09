@@ -1,25 +1,25 @@
-from sqlmodel import Field, SQLModel, Optional 
 from typing import Optional
-from pydantic import EmailStr
+from sqlmodel import Field, SQLModel
 
-class Exercise(SQLModel):
+
+class Exercise(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    exerciseId: str = Field(index=True, unique=True)
+
+    exercise_id: str = Field(index=True, unique=True)
     name: str
-    imageUrl: str
-    videoUrl: str
-    gender: str
-    excersiseType: str
-    bodyPart: str
-    equipment: str
-    targetMuscle: str
-    secondaryMuscle: Optional[str] = None
+
+    image_url: Optional[str] = None
+    video_url: Optional[str] = None
+
+    gender: Optional[str] = None
+    exercise_type: Optional[str] = None
+    body_part: Optional[str] = None
+    equipment: Optional[str] = None
+    target_muscle: Optional[str] = None
+    secondary_muscle: Optional[str] = None
+
     overview: Optional[str] = None
     instructions: Optional[str] = None
-    exerciseTips: str
-    variations: str
-    relatedExercisesId: str
-    
-    
-
-
+    exercise_tips: Optional[str] = None
+    variations: Optional[str] = None
+    related_exercise_ids: Optional[str] = None
