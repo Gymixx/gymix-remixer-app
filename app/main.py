@@ -5,16 +5,17 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.routers import templates, static_files, router, api_router
 from app.config import get_settings
 from contextlib import asynccontextmanager
-from app.routers import exercise
+from app.routers import exercise, routine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from app.database import create_db_and_tables
-    from app.models.exercise import Exercise
     from app.models.user import User
+    from app.models.exercise import Exercise
+    from app.models.routine import Routine
+    from app.models.routine_exercise import RoutineExercise
+    from app.database import create_db_and_tables
     create_db_and_tables()
     yield
-
 
 
 app = FastAPI(middleware=[
@@ -26,6 +27,7 @@ app = FastAPI(middleware=[
 app.include_router(router)
 app.include_router(api_router)
 app.include_router(exercise.router)
+app.include_router(routine.router)
 app.mount("/static", static_files, name="static")
 
 @app.exception_handler(status.HTTP_401_UNAUTHORIZED)

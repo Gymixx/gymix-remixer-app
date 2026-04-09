@@ -6,5 +6,5 @@ class RoutineExercise(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     routine_id: int = Field(foreign_key="routine.id")
     exercise_id: int = Field(foreign_key="exercise.id")
-    sets: Optional[int] = None
-    reps: Optional[int] = None
+    sets: Optional[int] = Field(default=None)
+    reps: Optional[int] = Field(default=None)

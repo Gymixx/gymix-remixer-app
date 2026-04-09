@@ -4,6 +4,8 @@ from sqlmodel import select
 
 from app.database import create_db_and_tables, drop_all, get_cli_session
 from app.models.exercise import Exercise
+from app.models.user import User
+from app.utilities.security import encrypt_password
 
 cli = typer.Typer()
 
@@ -13,6 +15,28 @@ API_URL = "https://7rjbixjepp.ufs.sh/f/3TSyxQfJpchbFREfy5mwSaRJOTILDMBYzexUbq4u9
 @cli.command()
 def initialize():
     create_db_and_tables()
+
+    with get_cli_session() as session:
+        existing = session.exec(
+            select(User).where(User.username == "bob")
+        ).first()
+
+        if not existing:
+            bob = User(
+                username="bob",
+                email="bob@mail.com",
+                password=encrypt_password("bobpass"),
+                role="admin"
+            )
+
+            session.add(bob)
+            session.commit()
+            session.refresh(bob)
+
+            print("Bob user created!")
+        else:
+            print("Bob already exists!")
+
     print("Database initialized!")
 
 
@@ -36,7 +60,7 @@ def seed_exercises():
         return
 
     if not isinstance(data, list):
-        print("Unexpected API response format. Expected a list.")
+        print("Unexpected API response format.")
         return
 
     inserted = 0
