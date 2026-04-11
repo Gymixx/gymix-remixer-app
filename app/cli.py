@@ -1,4 +1,4 @@
-import requests
+import requests 
 import typer
 from sqlmodel import select
 
@@ -22,12 +22,14 @@ def initialize():
         ).first()
 
         if not existing:
+            #  Bob user with admin role
             bob = User(
                 username="bob",
                 email="bob@mail.com",
                 password=encrypt_password("bobpass"),
                 role="admin"
             )
+            
 
             session.add(bob)
             session.commit()
@@ -37,7 +39,27 @@ def initialize():
         else:
             print("Bob already exists!")
 
-    print("Database initialized!")
+        existing2 = session.exec(
+            select(User).where(User.username == "bob2")
+        ).first()
+
+        if not existing2:
+            #  Bob2 user with user role
+            bob2 = User(
+                username="bob2",
+                email="bob2@mail.com",
+                password=encrypt_password("bob2pass"),
+                role="user"
+            )
+
+            session.add(bob2)
+            session.commit()
+            session.refresh(bob2)
+
+            print("Bob2 user created!")
+        else:
+            print("Bob2 already exists!")
+
 
 
 @cli.command()

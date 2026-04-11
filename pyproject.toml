@@ -26,6 +26,7 @@ dependencies = [
     "ruff",
     "sqlmodel",
     "tabulate",
+    "requests",
     "typer",
     "uvicorn[standard]",
 ]
