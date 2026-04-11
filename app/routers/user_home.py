@@ -1,12 +1,13 @@
-import random
-from fastapi import APIRouter, HTTPException, Depends, Request, Query
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi import status
+from fastapi import APIRouter, Request, Query
+from fastapi.responses import HTMLResponse
 from sqlmodel import select
 from app.dependencies.session import SessionDep
-from app.dependencies.auth import AuthDep, IsUserLoggedIn, get_current_user, is_admin
+from app.dependencies.auth import AuthDep
 from app.models.exercise import Exercise
+from app.utilities.pagination import Pagination
 from . import router, templates
+
+PAGE_SIZE = 20
 
 
 @router.get("/app", response_class=HTMLResponse)
@@ -14,22 +15,15 @@ async def user_home_view(
     request: Request,
     user: AuthDep,
     db: SessionDep,
-    body_part: str | None = Query(default=None),
-    target_muscle: str | None = Query(default=None),
-    difficulty: str | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
 ):
-    statement = select(Exercise)
+    all_exercises = db.exec(select(Exercise)).all()
+    total_count = len(all_exercises)
 
-    if body_part:
-        statement = statement.where(Exercise.body_part.contains(body_part))
-    if target_muscle:
-        statement = statement.where(Exercise.target_muscle.contains(target_muscle))
-    if difficulty:
-        statement = statement.where(Exercise.difficulty == difficulty)
+    pagination = Pagination(total_count=total_count, current_page=page, limit=PAGE_SIZE)
 
-    exercises = db.exec(statement).all()
-    random.shuffle(exercises)
-    exercises = exercises[:30]
+    offset = (page - 1) * PAGE_SIZE
+    exercises = all_exercises[offset: offset + PAGE_SIZE]
 
     return templates.TemplateResponse(
         request=request,
@@ -37,5 +31,6 @@ async def user_home_view(
         context={
             "user": user,
             "exercises": exercises,
+            "pagination": pagination,
         }
     )
