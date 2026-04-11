@@ -56,7 +56,15 @@
                     <h5 class="card-title">{{ exercise.name }}</h5>
                     <p class="card-text text-muted small mb-1">{{ exercise.body_part }}</p>
                     <p class="card-text text-muted small">{{ exercise.target_muscle }}</p>
-                    <a href="{{ exercise.gif_url }}" class="btn btn-primary mt-auto" target="_blank">View</a>
+                    <button
+                        type="button"
+                        class="btn btn-primary mt-auto"
+                        data-bs-toggle="modal"
+                        data-bs-target="#exerciseModal"
+                        data-name="{{ exercise.name }}"
+                        data-instructions="{{ exercise.instructions or 'No instructions available.' }}">
+                        View
+                    </button>
                 </div>
             </div>
         </div>
@@ -88,4 +96,28 @@
     </div>
     {% endif %}
 
+    <div class="modal fade" id="exerciseModal" tabindex="-1" aria-labelledby="exerciseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exerciseModalLabel"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="exerciseModalInstructions"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block subpage_scripts %}
+<script>
+    document.getElementById('exerciseModal').addEventListener('show.bs.modal', function (e) {
+        const btn = e.relatedTarget;
+        document.getElementById('exerciseModalLabel').textContent = btn.dataset.name;
+        document.getElementById('exerciseModalInstructions').textContent = btn.dataset.instructions;
+    });
+</script>
 {% endblock %}
