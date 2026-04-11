@@ -1,30 +1,42 @@
 {% extends "authenticated-base.html" %}
 
+{% block additional_styles %}
+<style>
+    .exercise-img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 1rem 1rem 0 0;
+    }
+</style>
+{% endblock %}
+
 {% block external_js %}
 <script src="{{ url_for('static', path='js/app.js')}}"></script>
 {% endblock %}
 
-
 {% block subpage_content %}
 
-    <div class="container" id="content">
-        <div class="row">
-            <p>
-                This is table is rendered on the Client. JavaScript code requests the data from <a href="/api/users">/api/users</a> and writes it to this page.
-            </p>
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Gymix App</h1>
         </div>
-        <div class="row">
-            <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Id</th><th>Username</th>
-                  </tr>
-                </thead>
-                <tbody id="result">
-                
-                <tbody>
-            </table>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 row-cols-xl-4 g-4">
+        {% for exercise in exercises %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <img src="{{ exercise.image_url }}" class="exercise-img" alt="{{ exercise.name }}">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ exercise.name }}</h5>
+                    <p class="card-text text-muted small mb-1">{{ exercise.body_part }}</p>
+                    <p class="card-text text-muted small">{{ exercise.target_muscle }}</p>
+                    <a href="{{ exercise.gif_url }}" class="btn btn-primary mt-auto" target="_blank">View</a>
+                </div>
+            </div>
         </div>
+        {% endfor %}
     </div>
 
 {% endblock %}
