@@ -1,3 +1,4 @@
+import random
 from fastapi import APIRouter, HTTPException, Depends, Request, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi import status
@@ -27,6 +28,8 @@ async def user_home_view(
         statement = statement.where(Exercise.difficulty == difficulty)
 
     exercises = db.exec(statement).all()
+    random.shuffle(exercises)
+    exercises = exercises[:30]
 
     return templates.TemplateResponse(
         request=request,
