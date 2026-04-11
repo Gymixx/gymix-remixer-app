@@ -1,4 +1,4 @@
-import requests 
+import requests
 import typer
 from sqlmodel import select
 
@@ -9,7 +9,8 @@ from app.utilities.security import encrypt_password
 
 cli = typer.Typer()
 
-API_URL = "https://7rjbixjepp.ufs.sh/f/3TSyxQfJpchbFREfy5mwSaRJOTILDMBYzexUbq4u9ciXQ7Hp"
+API_URL = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json"
+IMAGE_BASE_URL = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/"
 
 
 @cli.command()
@@ -22,14 +23,12 @@ def initialize():
         ).first()
 
         if not existing:
-            #  Bob user with admin role
             bob = User(
                 username="bob",
                 email="bob@mail.com",
                 password=encrypt_password("bobpass"),
                 role="admin"
             )
-            
 
             session.add(bob)
             session.commit()
@@ -44,7 +43,6 @@ def initialize():
         ).first()
 
         if not existing2:
-            #  Bob2 user with user role
             bob2 = User(
                 username="bob2",
                 email="bob2@mail.com",
@@ -60,6 +58,7 @@ def initialize():
         else:
             print("Bob2 already exists!")
 
+    print("Database initialized!")
 
 
 @cli.command()
@@ -77,6 +76,7 @@ def seed_exercises():
         response = requests.get(API_URL, timeout=60)
         response.raise_for_status()
         data = response.json()
+        print(f"Total exercises fetched: {len(data)}")
     except requests.RequestException as e:
         print(f"Error fetching API data: {e}")
         return
@@ -90,7 +90,7 @@ def seed_exercises():
 
     with get_cli_session() as session:
         for item in data:
-            exercise_id = item.get("exerciseId")
+            exercise_id = item.get("id")
             if not exercise_id:
                 skipped += 1
                 continue
@@ -103,23 +103,23 @@ def seed_exercises():
                 skipped += 1
                 continue
 
-            image_urls = item.get("imageUrls", {})
-            gif_urls = item.get("gifUrls", {})
+            images = item.get("images", [])
+            image_url = IMAGE_BASE_URL + images[0] if images else None
 
             exercise = Exercise(
                 exercise_id=exercise_id,
                 name=item.get("name", "").strip(),
-                image_url=image_urls.get("720p") or image_urls.get("480p") or image_urls.get("360p"),
-                gif_url=gif_urls.get("720p") or gif_urls.get("480p") or gif_urls.get("360p"),
-                body_part=", ".join(item.get("bodyParts", [])) if item.get("bodyParts") else None,
-                target_muscle=", ".join(item.get("targetMuscles", [])) if item.get("targetMuscles") else None,
+                image_url=image_url,
+                gif_url=None,
+                body_part=item.get("category"),
+                target_muscle=", ".join(item.get("primaryMuscles", [])) if item.get("primaryMuscles") else None,
                 secondary_muscle=", ".join(item.get("secondaryMuscles", [])) if item.get("secondaryMuscles") else None,
-                equipment=", ".join(item.get("equipments", [])) if item.get("equipments") else None,
-                difficulty=item.get("difficulty"),
-                exercise_type=", ".join(item.get("exerciseTypes", [])) if item.get("exerciseTypes") else None,
-                overview=item.get("overview"),
+                equipment=item.get("equipment"),
+                difficulty=item.get("level"),
+                exercise_type=item.get("mechanic"),
+                overview=None,
                 instructions="\n".join(item.get("instructions", [])) if item.get("instructions") else None,
-                related_exercise_ids=", ".join(item.get("relatedExerciseIds", [])) if item.get("relatedExerciseIds") else None,
+                related_exercise_ids=None,
             )
 
             session.add(exercise)

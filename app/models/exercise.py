@@ -9,7 +9,6 @@ class Exercise(SQLModel, table=True):
     name: str
 
     image_url: Optional[str] = None
-    gif_url: Optional[str] = None
 
     body_part: Optional[str] = None
     target_muscle: Optional[str] = None
@@ -18,7 +17,5 @@ class Exercise(SQLModel, table=True):
 
     difficulty: Optional[str] = None
     exercise_type: Optional[str] = None
-
-    overview: Optional[str] = None
     instructions: Optional[str] = None
-    related_exercise_ids: Optional[str] = None
+    
