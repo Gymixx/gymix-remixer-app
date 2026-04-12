@@ -1,12 +1,48 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import Session, select
 
 from app.database import engine
 from app.models.routine import Routine
 from app.models.routine_exercise import RoutineExercise
 from app.models.exercise import Exercise
+from app.dependencies.auth import AuthDep
+from app.dependencies.session import SessionDep
+from app.routers import templates
 
 router = APIRouter(prefix="/routines", tags=["Routines"])
+
+
+@router.get("", response_class=HTMLResponse)
+async def routines_page(request: Request, user: AuthDep, db: SessionDep):
+    routines_raw = db.exec(select(Routine).where(Routine.user_id == user.id)).all()
+
+    routines = []
+    for routine in routines_raw:
+        routine_exercises = db.exec(
+            select(RoutineExercise).where(RoutineExercise.routine_id == routine.id)
+        ).all()
+        exercises = []
+        for item in routine_exercises:
+            exercise = db.get(Exercise, item.exercise_id)
+            if exercise:
+                exercises.append({"name": exercise.name, "sets": item.sets, "reps": item.reps})
+        routines.append({"id": routine.id, "name": routine.name, "exercises": exercises})
+
+    return templates.TemplateResponse(
+        request=request,
+        name="routines.html",
+        context={"user": user,
+                "routines": routines},
+    )
+
+
+@router.post("/create")
+async def create_routine_form(user: AuthDep, db: SessionDep, name: str = Form(...)):
+    routine = Routine(name=name, user_id=user.id)
+    db.add(routine)
+    db.commit()
+    return RedirectResponse(url="/routines", status_code=303)
 
 
 @router.post("/")

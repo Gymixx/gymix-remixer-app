@@ -1,0 +1,120 @@
+{% extends "authenticated-base.html" %}
+
+{% block additional_styles %}
+<style>
+    .routine-card {
+        border: none;
+        border-radius: 1rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .routine-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1) !important;
+    }
+    .routine-card .card-header {
+        background: #1b263b;
+        color: #fff;
+        border-radius: 1rem 1rem 0 0;
+        font-weight: 700;
+        font-size: 1rem;
+        padding: 0.85rem 1.1rem;
+        border: none;
+    }
+    .exercise-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.45rem 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.85rem;
+    }
+    .exercise-row:last-child { border-bottom: none; }
+    .exercise-row .exercise-name { color: #1b263b; font-weight: 500; }
+    .exercise-row .sets-reps {
+        font-size: 0.78rem;
+        color: #6c757d;
+        white-space: nowrap;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 4rem 1rem;
+        color: #adb5bd;
+    }
+    .empty-state .material-symbols-outlined {
+        font-size: 3rem;
+        display: block;
+        margin-bottom: 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block subpage_content %}
+
+    <div class="row mb-4">
+        <div class="col">
+            <h1>My Routines</h1>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRoutineModal">
+                <span class="material-symbols-outlined me-1">add</span>
+                Create New Routine
+            </button>
+        </div>
+    </div>
+
+    <div class="modal fade" id="createRoutineModal" tabindex="-1" aria-labelledby="createRoutineModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createRoutineModalLabel">New Routine</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" action="/routines/create">
+                    <div class="modal-body">
+                        <label for="routineName" class="form-label">Routine name</label>
+                        <input type="text" id="routineName" name="name" class="form-control" placeholder="Enter routine name" required autofocus>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if routines %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+        {% for routine in routines %}
+        <div class="col">
+            <div class="card routine-card h-100 shadow-sm">
+                <div class="card-header">
+                    {{ routine.name }}
+                </div>
+                <div class="card-body">
+                    {% if routine.exercises %}
+                        {% for ex in routine.exercises %}
+                        <div class="exercise-row">
+                            <span class="exercise-name">{{ ex.name }}</span>
+                            <span class="sets-reps">{{ ex.sets }} sets &times; {{ ex.reps }} reps</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted small mb-0">No exercises added yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <span class="material-symbols-outlined">fitness_center</span>
+        <p class="fw-semibold">No routines yet</p>
+        <p class="small">Create your first routine to get started.</p>
+    </div>
+    {% endif %}
+
+{% endblock %}

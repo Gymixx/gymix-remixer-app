@@ -65,6 +65,16 @@
                         data-instructions="{{ exercise.instructions or 'No instructions available.' }}">
                         View
                     </button>
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary mt-2"
+                        modal-toggle="addToRoutineModal"
+                        data-exercise-id="{{ exercise.exercise_id }}"
+                        href = "/routines/add_exercise?exercise_id={{ exercise.exercise_id }}"
+                        method="post"
+                        action="/routines/add_exercise">
+                        Add to Routine
+                    </button>
                 </div>
             </div>
         </div>
