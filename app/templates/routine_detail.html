@@ -29,7 +29,7 @@
 <div class="row mb-4 align-items-center">
     <div class="col">
         <a href="/routines" class="btn btn-sm btn-outline-secondary me-2">
-            <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle;">arrow_back</span>
+            <span class="material-symbols-outlined" style="font-size:1rem;">arrow_back</span>
             Back
         </a>
         <h1 class="d-inline-block mb-0 ms-2">{{ routine.name }}</h1>
@@ -41,11 +41,15 @@
     {% for ex in exercises %}
     <div class="col">
         <div class="card exercise-card h-100 shadow-sm">
+
             {% if ex.image_url %}
             <img src="{{ ex.image_url }}" alt="{{ ex.exercise_name }}">
             {% endif %}
-            <div class="card-body">
+
+            <div class="card-body d-flex flex-column">
+
                 <h5 class="card-title fw-bold">{{ ex.exercise_name }}</h5>
+
                 <div class="d-flex flex-wrap gap-1 mb-2">
                     {% if ex.body_part %}
                     <span class="badge bg-primary badge-pill">{{ ex.body_part }}</span>
@@ -60,18 +64,34 @@
                     <span class="badge bg-warning text-dark badge-pill">{{ ex.difficulty }}</span>
                     {% endif %}
                 </div>
-                <p class="mb-1 fw-semibold text-muted small">
+
+                <p class="mb-3 fw-semibold text-muted small">
                     {{ ex.sets }} sets &times; {{ ex.reps }} reps
                 </p>
-                 <button
+
+                <!-- BUTTONS -->
+                <div class="mt-auto d-grid gap-2">
+
+                    <!-- VIEW INSTRUCTIONS -->
+                    <button
                         type="button"
-                        class="btn btn-primary mt-auto"
+                        class="btn btn-primary"
                         data-bs-toggle="modal"
                         data-bs-target="#exerciseModal"
                         data-name="{{ ex.exercise_name }}"
                         data-instructions="{{ ex.instructions or 'No instructions available.' }}">
-                        View instructions
+                        View Instructions
                     </button>
+
+                    <!-- REMOVE FROM ROUTINE -->
+                    <form method="post" action="/routines/{{ routine.id }}/remove-exercise/{{ ex.id }}">
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            Remove from Routine
+                        </button>
+                    </form>
+
+                </div>
+
             </div>
         </div>
     </div>
@@ -79,24 +99,25 @@
 </div>
 {% else %}
 <div class="text-center py-5 text-muted">
-    <span class="material-symbols-outlined" style="font-size:3rem;display:block;margin-bottom:0.75rem;">fitness_center</span>
+    <span class="material-symbols-outlined" style="font-size:3rem;">fitness_center</span>
     <p class="fw-semibold">No exercises in this routine yet.</p>
 </div>
 {% endif %}
 
-<div class="modal fade" id="exerciseModal" tabindex="-1" aria-labelledby="exerciseModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exerciseModalLabel"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="exerciseModalInstructions"></p>
-                </div>
+<!-- MODAL -->
+<div class="modal fade" id="exerciseModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="exerciseModalLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="exerciseModalInstructions"></p>
             </div>
         </div>
     </div>
+</div>
 
 {% endblock %}
 
@@ -104,10 +125,11 @@
 <script>
     document.getElementById('exerciseModal').addEventListener('show.bs.modal', function (e) {
         const btn = e.relatedTarget;
-        document.getElementById('exerciseModalLabel').textContent = btn.dataset.name;
-        document.getElementById('exerciseModalInstructions').textContent = btn.dataset.instructions;
-    });
 
+        document.getElementById('exerciseModalLabel').textContent = btn.dataset.name;
+
+        document.getElementById('exerciseModalInstructions').innerHTML =
+            btn.dataset.instructions.replace(/\n/g, "<br>");
+    });
 </script>
 {% endblock %}
-

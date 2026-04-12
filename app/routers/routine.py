@@ -16,7 +16,7 @@ router = APIRouter(prefix="/routines", tags=["Routines"])
 
 
 @router.get("", response_class=HTMLResponse)
-async def routines_page(request: Request,user: AuthDep,db: SessionDep,):  
+async def routines_page(request: Request, user: AuthDep, db: SessionDep):
     routines_raw = db.exec(select(Routine).where(Routine.user_id == user.id)).all()
 
     routines = []
@@ -28,14 +28,25 @@ async def routines_page(request: Request,user: AuthDep,db: SessionDep,):
         for item in routine_exercises:
             exercise = db.get(Exercise, item.exercise_id)
             if exercise:
-                exercises.append({"name": exercise.name, "sets": item.sets, "reps": item.reps})
-        routines.append({"id": routine.id, "name": routine.name, "exercises": exercises})
+                exercises.append({
+                    "id": item.id,
+                    "name": exercise.name,
+                    "sets": item.sets,
+                    "reps": item.reps
+                })
+        routines.append({
+            "id": routine.id,
+            "name": routine.name,
+            "exercises": exercises
+        })
 
     return templates.TemplateResponse(
         request=request,
         name="routines.html",
-        context={"user": user,
-                "routines": routines},
+        context={
+            "user": user,
+            "routines": routines
+        },
     )
 
 
@@ -44,6 +55,52 @@ async def create_routine_form(user: AuthDep, db: SessionDep, name: str = Form(..
     routine = Routine(name=name, user_id=user.id)
     db.add(routine)
     db.commit()
+    return RedirectResponse(url="/routines", status_code=303)
+
+
+@router.post("/{routine_id}/edit")
+async def edit_routine_form(
+    routine_id: int,
+    user: AuthDep,
+    db: SessionDep,
+    name: str = Form(...)
+):
+    routine = db.get(Routine, routine_id)
+
+    if not routine:
+        return HTMLResponse("Routine not found", status_code=404)
+
+    if routine.user_id != user.id:
+        return HTMLResponse("Unauthorized", status_code=403)
+
+    routine.name = name
+    db.add(routine)
+    db.commit()
+    db.refresh(routine)
+
+    return RedirectResponse(url="/routines", status_code=303)
+
+
+@router.post("/{routine_id}/delete")
+async def delete_routine_form(routine_id: int, user: AuthDep, db: SessionDep):
+    routine = db.get(Routine, routine_id)
+
+    if not routine:
+        return HTMLResponse("Routine not found", status_code=404)
+
+    if routine.user_id != user.id:
+        return HTMLResponse("Unauthorized", status_code=403)
+
+    routine_exercises = db.exec(
+        select(RoutineExercise).where(RoutineExercise.routine_id == routine_id)
+    ).all()
+
+    for item in routine_exercises:
+        db.delete(item)
+
+    db.delete(routine)
+    db.commit()
+
     return RedirectResponse(url="/routines", status_code=303)
 
 
@@ -69,6 +126,9 @@ async def get_routine(request: Request, routine_id: int, user: AuthDep, db: Sess
     routine = db.get(Routine, routine_id)
     if not routine:
         return HTMLResponse("Routine not found", status_code=404)
+
+    if routine.user_id != user.id:
+        return HTMLResponse("Unauthorized", status_code=403)
 
     routine_exercises = db.exec(
         select(RoutineExercise).where(RoutineExercise.routine_id == routine_id)
@@ -108,6 +168,14 @@ async def add_exercise_to_routine(
     user: AuthDep,
     routine_id: int = Form(...),
 ):
+    routine = db.get(Routine, routine_id)
+
+    if not routine:
+        return HTMLResponse("Routine not found", status_code=404)
+
+    if routine.user_id != user.id:
+        return HTMLResponse("Unauthorized", status_code=403)
+
     routine_exercise = RoutineExercise(
         routine_id=routine_id,
         exercise_id=exercise_id,
@@ -119,15 +187,27 @@ async def add_exercise_to_routine(
     return RedirectResponse(url="/app", status_code=303)
 
 
-@router.delete("/{routine_id}/remove-exercise/{routine_exercise_id}")
-def remove_exercise_from_routine(routine_id: int, routine_exercise_id: int):
-    with Session(engine) as session:
-        routine_exercise = session.get(RoutineExercise, routine_exercise_id)
+@router.post("/{routine_id}/remove-exercise/{routine_exercise_id}")
+async def remove_exercise_from_routine(
+    routine_id: int,
+    routine_exercise_id: int,
+    user: AuthDep,
+    db: SessionDep,
+):
+    routine = db.get(Routine, routine_id)
 
-        if not routine_exercise or routine_exercise.routine_id != routine_id:
-            return {"message": "Routine exercise not found"}
+    if not routine:
+        return HTMLResponse("Routine not found", status_code=404)
 
-        session.delete(routine_exercise)
-        session.commit()
+    if routine.user_id != user.id:
+        return HTMLResponse("Unauthorized", status_code=403)
 
-        return {"message": "Exercise removed from routine"}
+    routine_exercise = db.get(RoutineExercise, routine_exercise_id)
+
+    if not routine_exercise or routine_exercise.routine_id != routine_id:
+        return HTMLResponse("Routine exercise not found", status_code=404)
+
+    db.delete(routine_exercise)
+    db.commit()
+
+    return RedirectResponse(url=f"/routines/{routine_id}", status_code=303)
