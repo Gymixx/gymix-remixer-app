@@ -47,6 +47,25 @@
         </div>
     </div>
 
+    <div class="row mb-4">
+        <div class="col-12 col-md-4">
+            <form method="get" action="/app" id="filterForm">
+                <div class="input-group">
+                    <select class="form-select" name="target_muscle" id="targetMuscleSelect" aria-label="Filter by target muscle">
+                        <option value="">All Muscles</option>
+                        {% for muscle in target_muscles %}
+                        <option value="{{ muscle }}" {% if muscle == selected_target_muscle %}selected{% endif %}>{{ muscle }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-primary" type="submit">Filter</button>
+                    {% if selected_target_muscle %}
+                    <a href="/app" class="btn btn-outline-secondary">Clear</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="row row-cols-1 row-cols-md-3 row-cols-xl-4 g-4">
         {% for exercise in exercises %}
         <div class="col">
@@ -88,17 +107,18 @@
         </span>
         <nav>
             <ul class="pagination mb-0 gap-1">
+                {%- set bp = ("&target_muscle=" ~ selected_target_muscle) if selected_target_muscle else "" %}
                 {%- if not pagination.has_prev %}<li class="page-item disabled"><a class="page-link">&lsaquo;</a></li>
-                {%- else %}<li class="page-item"><a class="page-link" href="/app?page={{ pagination.prev_num }}">&lsaquo;</a></li>
+                {%- else %}<li class="page-item"><a class="page-link" href="/app?page={{ pagination.prev_num }}{{ bp }}">&lsaquo;</a></li>
                 {%- endif %}
                 {%- for p in pagination.iter_pages() %}
                     {%- if p is none %}<li class="page-item disabled"><span class="page-link">&hellip;</span></li>
-                    {%- elif p == pagination.page %}<li class="page-item active"><a class="page-link" href="/app?page={{ p }}">{{ p }}</a></li>
-                    {%- else %}<li class="page-item"><a class="page-link" href="/app?page={{ p }}">{{ p }}</a></li>
+                    {%- elif p == pagination.page %}<li class="page-item active"><a class="page-link" href="/app?page={{ p }}{{ bp }}">{{ p }}</a></li>
+                    {%- else %}<li class="page-item"><a class="page-link" href="/app?page={{ p }}{{ bp }}">{{ p }}</a></li>
                     {%- endif %}
                 {%- endfor %}
                 {%- if not pagination.has_next %}<li class="page-item disabled"><a class="page-link">&rsaquo;</a></li>
-                {%- else %}<li class="page-item"><a class="page-link" href="/app?page={{ pagination.next_num }}">&rsaquo;</a></li>
+                {%- else %}<li class="page-item"><a class="page-link" href="/app?page={{ pagination.next_num }}{{ bp }}">&rsaquo;</a></li>
                 {%- endif %}
             </ul>
         </nav>

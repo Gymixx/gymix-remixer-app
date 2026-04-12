@@ -121,7 +121,7 @@
                         class="btn btn-outline-secondary btn-sm"
                         data-bs-toggle="modal"
                         data-bs-target="#editRoutineModal{{ routine.id }}">
-                        Edit Routine
+                        Edit Name
                     </button>
 
                     <button
@@ -142,7 +142,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit Routine</h5>
+                    <h5 class="modal-title">Edit Routine Name</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="post" action="/routines/{{ routine.id }}/edit">
