@@ -1,6 +1,6 @@
 from typing import Optional
 from requests import request
-from app.utilities import flash
+from app.utilities.flash import flash
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import Session, select
@@ -51,16 +51,18 @@ async def routines_page(request: Request, user: AuthDep, db: SessionDep):
 
 
 @router.post("/create")
-async def create_routine_form(user: AuthDep, db: SessionDep, name: str = Form(...)):
+async def create_routine_form(
+    request: Request, user: AuthDep, db: SessionDep, name: str = Form(...)):
     routine = Routine(name=name, user_id=user.id)
     db.add(routine)
     db.commit()
-    flash(request, "Routine created successfully!", "success")
+    flash(request, "Routine created successfully!")
     return RedirectResponse(url="/routines", status_code=303)
 
 
 @router.post("/{routine_id}/edit")
 async def edit_routine_form(
+    request: Request,
     routine_id: int,
     user: AuthDep,
     db: SessionDep,
@@ -83,7 +85,8 @@ async def edit_routine_form(
 
 
 @router.post("/{routine_id}/delete")
-async def delete_routine_form(routine_id: int, user: AuthDep, db: SessionDep):
+async def delete_routine_form(
+    request: Request, routine_id: int, user: AuthDep, db: SessionDep):
     routine = db.get(Routine, routine_id)
 
     if not routine:
@@ -102,7 +105,7 @@ async def delete_routine_form(routine_id: int, user: AuthDep, db: SessionDep):
     db.delete(routine)
     db.commit()
 
-    flash(request, "Routine deleted successfully!", "success")
+    flash(request, "Routine deleted successfully!")
     return RedirectResponse(url="/routines", status_code=303)
 
 
@@ -165,6 +168,7 @@ async def get_routine(request: Request, routine_id: int, user: AuthDep, db: Sess
 
 @router.post("/{exercise_id}/add-exercise")
 async def add_exercise_to_routine(
+    request: Request,
     exercise_id: int,
     db: SessionDep,
     user: AuthDep,
@@ -187,7 +191,7 @@ async def add_exercise_to_routine(
     db.add(routine_exercise)
     db.commit()
 
-    flash(request, "Exercise added to routine!", "success")
+    flash(request, "Exercise added to routine!")
     return RedirectResponse(url="/app", status_code=303)
 
 
@@ -197,6 +201,7 @@ async def remove_exercise_from_routine(
     routine_exercise_id: int,
     user: AuthDep,
     db: SessionDep,
+    request: Request,
 ):
     routine = db.get(Routine, routine_id)
 
@@ -214,5 +219,5 @@ async def remove_exercise_from_routine(
     db.delete(routine_exercise)
     db.commit()
 
-    flash(request, "Exercise removed from routine!", "success")
+    flash(request, "Exercise removed from routine!")
     return RedirectResponse(url=f"/routines/{routine_id}", status_code=303)

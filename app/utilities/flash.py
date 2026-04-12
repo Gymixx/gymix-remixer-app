@@ -7,5 +7,10 @@ def flash(request: Request, message: str, type: str = "success") -> None:
     request.session["_messages"].append({"message": message, "type": type})
 
 
-def get_flashed_messages(request: Request):
-   return request.session.pop("_messages") if "_messages" in request.session else []
+def get_flashed_messages(request: Request, with_categories: bool = False):
+    messages = request.session.pop("_messages") if "_messages" in request.session else [] 
+
+    if with_categories:
+        return [(msg["type"], msg["message"]) for msg in messages]
+    
+    return messages
