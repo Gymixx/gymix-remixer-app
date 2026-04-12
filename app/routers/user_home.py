@@ -4,6 +4,7 @@ from sqlmodel import select
 from app.dependencies.session import SessionDep
 from app.dependencies.auth import AuthDep
 from app.models.exercise import Exercise
+from app.models.routine import Routine
 from app.utilities.pagination import Pagination
 from . import router, templates
 
@@ -24,6 +25,8 @@ async def user_home_view(
 
     offset = (page - 1) * PAGE_SIZE
     exercises = all_exercises[offset: offset + PAGE_SIZE]
+    
+    routines  = db.exec(select(Routine)).all()
 
     return templates.TemplateResponse(
         request=request,
@@ -32,5 +35,6 @@ async def user_home_view(
             "user": user,
             "exercises": exercises,
             "pagination": pagination,
+            "routines": routines
         }
     )

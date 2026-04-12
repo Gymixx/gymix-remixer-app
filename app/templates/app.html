@@ -68,11 +68,9 @@
                     <button
                         type="button"
                         class="btn btn-outline-secondary mt-2"
-                        modal-toggle="addToRoutineModal"
-                        data-exercise-id="{{ exercise.exercise_id }}"
-                        href = "/routines/add_exercise?exercise_id={{ exercise.exercise_id }}"
-                        method="post"
-                        action="/routines/add_exercise">
+                        data-exercise-id="{{ exercise.id }}"
+                        data-bs-toggle="modal"
+                        data-bs-target="#addToRoutineModal">
                         Add to Routine
                     </button>
                 </div>
@@ -80,6 +78,7 @@
         </div>
         {% endfor %}
     </div>
+
 
     {% if pagination.total_pages > 1 %}
     <div class="d-flex align-items-center justify-content-between mt-5">
@@ -106,6 +105,32 @@
     </div>
     {% endif %}
 
+    <div class="modal fade" id="addToRoutineModal" tabindex="-1" aria-labelledby="addToRoutineModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addToRoutineModalLabel">Add Exercise to Routine</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addToRoutineForm" method="post" action="">
+                        <input type="hidden" name="exercise_id" id="modalExerciseId">
+                        <div class="mb-3">
+                            <label for="routineSelect" class="form-label">Select Routine</label>
+                            <select class="form-select" id="routineSelect" name="routine_id" required>
+                                <option value="" disabled selected>Choose a routine...</option>
+                                {% for routine in routines %}
+                                <option value="{{ routine.id }}">{{ routine.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add to Routine</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="exerciseModal" tabindex="-1" aria-labelledby="exerciseModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
@@ -128,6 +153,12 @@
         const btn = e.relatedTarget;
         document.getElementById('exerciseModalLabel').textContent = btn.dataset.name;
         document.getElementById('exerciseModalInstructions').textContent = btn.dataset.instructions;
+    });
+
+   // This handles the modal for adding exercise
+    document.getElementById('addToRoutineModal').addEventListener('show.bs.modal', function (e) {
+        const exerciseId = e.relatedTarget.dataset.exerciseId;
+        document.getElementById('addToRoutineForm').action = `/routines/${exerciseId}/add-exercise`;
     });
 </script>
 {% endblock %}

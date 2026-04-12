@@ -91,30 +91,22 @@ def get_routine(routine_id: int):
         }
 
 
-@router.post("/{routine_id}/add-exercise")
-def add_exercise_to_routine(routine_id: int, exercise_id: int, sets: int = 3, reps: int = 10):
-    with Session(engine) as session:
-        routine = session.get(Routine, routine_id)
-        exercise = session.get(Exercise, exercise_id)
-
-        if not routine:
-            return {"message": "Routine not found"}
-
-        if not exercise:
-            return {"message": "Exercise not found"}
-
-        routine_exercise = RoutineExercise(
-            routine_id=routine_id,
-            exercise_id=exercise_id,
-            sets=sets,
-            reps=reps
-        )
-
-        session.add(routine_exercise)
-        session.commit()
-        session.refresh(routine_exercise)
-
-        return {"message": "Exercise added to routine", "routine_exercise": routine_exercise}
+@router.post("/{exercise_id}/add-exercise")
+async def add_exercise_to_routine(
+    exercise_id: int,
+    db: SessionDep,
+    user: AuthDep,
+    routine_id: int = Form(...),
+):
+    routine_exercise = RoutineExercise(
+        routine_id=routine_id,
+        exercise_id=exercise_id,
+        sets=3,
+        reps=10,
+    )
+    db.add(routine_exercise)
+    db.commit()
+    return RedirectResponse(url="/app", status_code=303)
 
 
 @router.delete("/{routine_id}/remove-exercise/{routine_exercise_id}")
