@@ -17,8 +17,12 @@ async def user_home_view(
     user: AuthDep,
     db: SessionDep,
     page: int = Query(default=1, ge=1),
+    body_part: str | None = Query(default=None),
 ):
-    all_exercises = db.exec(select(Exercise)).all()
+    statement = select(Exercise)
+    if body_part:
+        statement = statement.where(Exercise.body_part.contains(body_part))
+    all_exercises = db.exec(statement).all()
     total_count = len(all_exercises)
 
     pagination = Pagination(total_count=total_count, current_page=page, limit=PAGE_SIZE)
@@ -35,6 +39,7 @@ async def user_home_view(
             "user": user,
             "exercises": exercises,
             "pagination": pagination,
-            "routines": routines
+            "routines": routines,
+            "selected_body_part": body_part
         }
     )
