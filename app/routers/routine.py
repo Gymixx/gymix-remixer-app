@@ -181,6 +181,16 @@ async def add_exercise_to_routine(
 
     if routine.user_id != user.id:
         return HTMLResponse("Unauthorized", status_code=403)
+    
+    existing = db.exec(
+        select(RoutineExercise).where(
+            RoutineExercise.routine_id == routine_id,
+            RoutineExercise.exercise_id == exercise_id
+        )    ).first()
+    
+    if existing:
+        flash(request, "Exercise already in routine!")
+        return RedirectResponse(url="/app", status_code=303)
 
     routine_exercise = RoutineExercise(
         routine_id=routine_id,

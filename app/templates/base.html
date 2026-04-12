@@ -49,27 +49,12 @@
                     const category = "{{ category }}";
                     const message = "{{ message }}";
 
-                    toastTitle.textContent = category === "success" ? "Success" :
-                                             category === "danger" ? "Error" :
-                                             category === "warning" ? "Warning" : "Notice";
-
+                    toastTitle.textContent = "Notification";
                     toastContent.textContent = message;
 
                     toastElement.className = "toast";
-
-                    if (category === "success") {
-                        toastElement.style.backgroundColor = "#198754";
-                        toastElement.style.color = "white";
-                    } else if (category === "danger") {
-                        toastElement.style.backgroundColor = "#dc3545";
-                        toastElement.style.color = "white";
-                    } else if (category === "warning") {
-                        toastElement.style.backgroundColor = "#ffc107";
-                        toastElement.style.color = "black";
-                    } else {
-                        toastElement.style.backgroundColor = "#0d6efd";
-                        toastElement.style.color = "white";
-                    }
+                    toastElement.style.backgroundColor = "#212529";
+                    toastElement.style.color = "white";
 
                     const toast = new bootstrap.Toast(toastElement);
                     toast.show();
