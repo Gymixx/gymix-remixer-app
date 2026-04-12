@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import Session, select
@@ -14,7 +16,7 @@ router = APIRouter(prefix="/routines", tags=["Routines"])
 
 
 @router.get("", response_class=HTMLResponse)
-async def routines_page(request: Request, user: AuthDep, db: SessionDep):
+async def routines_page(request: Request,user: AuthDep,db: SessionDep,):  
     routines_raw = db.exec(select(Routine).where(Routine.user_id == user.id)).all()
 
     routines = []
@@ -62,33 +64,41 @@ def get_routines():
         return routines
 
 
-@router.get("/{routine_id}")
-def get_routine(routine_id: int):
-    with Session(engine) as session:
-        routine = session.get(Routine, routine_id)
-        if not routine:
-            return {"message": "Routine not found"}
+@router.get("/{routine_id}", response_class=HTMLResponse)
+async def get_routine(request: Request, routine_id: int, user: AuthDep, db: SessionDep):
+    routine = db.get(Routine, routine_id)
+    if not routine:
+        return HTMLResponse("Routine not found", status_code=404)
 
-        routine_exercises = session.exec(
-            select(RoutineExercise).where(RoutineExercise.routine_id == routine_id)
-        ).all()
+    routine_exercises = db.exec(
+        select(RoutineExercise).where(RoutineExercise.routine_id == routine_id)
+    ).all()
 
-        results = []
-        for item in routine_exercises:
-            exercise = session.get(Exercise, item.exercise_id)
-            if exercise:
-                results.append({
-                    "id": item.id,
-                    "exercise_id": exercise.id,
-                    "exercise_name": exercise.name,
-                    "sets": item.sets,
-                    "reps": item.reps
-                })
+    exercises = []
+    for item in routine_exercises:
+        exercise = db.get(Exercise, item.exercise_id)
+        if exercise:
+            exercises.append({
+                "id": item.id,
+                "exercise_id": exercise.id,
+                "exercise_name": exercise.name,
+                "image_url": exercise.image_url,
+                "body_part": exercise.body_part,
+                "target_muscle": exercise.target_muscle,
+                "secondary_muscle": exercise.secondary_muscle,
+                "equipment": exercise.equipment,
+                "difficulty": exercise.difficulty,
+                "exercise_type": exercise.exercise_type,
+                "instructions": exercise.instructions,
+                "sets": item.sets,
+                "reps": item.reps
+            })
 
-        return {
-            "routine": routine,
-            "exercises": results
-        }
+    return templates.TemplateResponse(
+        request=request,
+        name="routine_detail.html",
+        context={"user": user, "routine": routine, "exercises": exercises},
+    )
 
 
 @router.post("/{exercise_id}/add-exercise")

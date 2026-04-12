@@ -45,6 +45,10 @@
         display: block;
         margin-bottom: 0.75rem;
     }
+    .btn-view-routine .material-symbols-outlined {
+        font-size: 1rem;
+        vertical-align: middle;
+    }
 </style>
 {% endblock %}
 
@@ -104,6 +108,12 @@
                     {% else %}
                         <p class="text-muted small mb-0">No exercises added yet.</p>
                     {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <a href="/routines/{{ routine.id }}" class="btn btn-primary btn-sm w-100 btn-view-routine">
+                        <span class="material-symbols-outlined me-1">open_in_new</span>
+                        View Routine
+                    </a>
                 </div>
             </div>
         </div>

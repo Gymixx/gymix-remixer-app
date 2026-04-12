@@ -5,6 +5,8 @@ from sqlmodel import select
 from app.database import create_db_and_tables, drop_all, get_cli_session
 from app.models.exercise import Exercise
 from app.models.user import User
+from app.models.routine import Routine
+from app.models.routine_exercise import RoutineExercise
 from app.utilities.security import encrypt_password
 
 cli = typer.Typer()

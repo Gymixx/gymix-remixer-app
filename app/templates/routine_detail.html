@@ -1,0 +1,113 @@
+{% extends "authenticated-base.html" %}
+
+{% block additional_styles %}
+<style>
+    .exercise-card {
+        border: none;
+        border-radius: 1rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .exercise-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+    .exercise-card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 1rem 1rem 0 0;
+    }
+    .badge-pill {
+        border-radius: 999px;
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block subpage_content %}
+
+<div class="row mb-4 align-items-center">
+    <div class="col">
+        <a href="/routines" class="btn btn-sm btn-outline-secondary me-2">
+            <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle;">arrow_back</span>
+            Back
+        </a>
+        <h1 class="d-inline-block mb-0 ms-2">{{ routine.name }}</h1>
+    </div>
+</div>
+
+{% if exercises %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+    {% for ex in exercises %}
+    <div class="col">
+        <div class="card exercise-card h-100 shadow-sm">
+            {% if ex.image_url %}
+            <img src="{{ ex.image_url }}" alt="{{ ex.exercise_name }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title fw-bold">{{ ex.exercise_name }}</h5>
+                <div class="d-flex flex-wrap gap-1 mb-2">
+                    {% if ex.body_part %}
+                    <span class="badge bg-primary badge-pill">{{ ex.body_part }}</span>
+                    {% endif %}
+                    {% if ex.target_muscle %}
+                    <span class="badge bg-success badge-pill">{{ ex.target_muscle }}</span>
+                    {% endif %}
+                    {% if ex.equipment %}
+                    <span class="badge bg-secondary badge-pill">{{ ex.equipment }}</span>
+                    {% endif %}
+                    {% if ex.difficulty %}
+                    <span class="badge bg-warning text-dark badge-pill">{{ ex.difficulty }}</span>
+                    {% endif %}
+                </div>
+                <p class="mb-1 fw-semibold text-muted small">
+                    {{ ex.sets }} sets &times; {{ ex.reps }} reps
+                </p>
+                 <button
+                        type="button"
+                        class="btn btn-primary mt-auto"
+                        data-bs-toggle="modal"
+                        data-bs-target="#exerciseModal"
+                        data-name="{{ ex.exercise_name }}"
+                        data-instructions="{{ ex.instructions or 'No instructions available.' }}">
+                        View instructions
+                    </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+    <span class="material-symbols-outlined" style="font-size:3rem;display:block;margin-bottom:0.75rem;">fitness_center</span>
+    <p class="fw-semibold">No exercises in this routine yet.</p>
+</div>
+{% endif %}
+
+<div class="modal fade" id="exerciseModal" tabindex="-1" aria-labelledby="exerciseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exerciseModalLabel"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="exerciseModalInstructions"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block subpage_scripts %}
+<script>
+    document.getElementById('exerciseModal').addEventListener('show.bs.modal', function (e) {
+        const btn = e.relatedTarget;
+        document.getElementById('exerciseModalLabel').textContent = btn.dataset.name;
+        document.getElementById('exerciseModalInstructions').textContent = btn.dataset.instructions;
+    });
+
+</script>
+{% endblock %}
+
