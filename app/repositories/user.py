@@ -55,6 +55,8 @@ class UserRepository:
             user.username = user_data.username
         if user_data.email:
             user.email = user_data.email
+        if user_data.role:
+            user.role = user_data.role
         
         try:
             self.db.add(user)

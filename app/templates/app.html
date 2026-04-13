@@ -92,7 +92,8 @@
                         data-bs-toggle="modal"
                         data-bs-target="#exerciseModal"
                         data-name="{{ exercise.name }}"
-                        data-instructions="{{ exercise.instructions or 'No instructions available.' }}">
+                        data-instructions="{{ exercise.instructions or 'No instructions available.' }}"
+                        data-exercise-id="{{ exercise.id }}">
                         View
                     </button>
 
@@ -207,6 +208,16 @@
 
                 <h6>Instructions</h6>
                 <p id="exerciseModalInstructions"></p>
+                {% if user.role == "admin" %}
+                <div class="mt-3">
+                    <form id="deleteExerciseForm" method="post" action="" onsubmit="return confirm('Delete this exercise? This cannot be undone.')">
+                        <button type="submit" class="btn btn-outline-danger">
+                            <span class="material-symbols-outlined me-1">delete</span>
+                            Delete Exercise
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -220,6 +231,7 @@
         const btn = e.relatedTarget;
         const name = btn.dataset.name;
         const instructions = btn.dataset.instructions;
+        const exerciseId = btn.dataset.exerciseId;
 
         document.getElementById('exerciseModalLabel').textContent = name;
         document.getElementById('exerciseModalInstructions').innerHTML = instructions.replace(/\n/g, "<br>");
@@ -228,6 +240,11 @@
         const searchQuery = encodeURIComponent(`${name} exercise`);
         const searchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
         document.getElementById('youtubeSearchLink').href = searchUrl;
+
+        const deleteForm = document.getElementById('deleteExerciseForm');
+        if (deleteForm) {
+            deleteForm.action = `/exercises/delete/${exerciseId}`;
+        }
     });
 
     document.getElementById('addToRoutineModal').addEventListener('show.bs.modal', function (e) {

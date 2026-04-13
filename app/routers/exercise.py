@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, status
+from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
 
 from app.database import engine
@@ -27,3 +28,13 @@ def get_exercises(
 
         exercises = session.exec(statement).all()
         return exercises
+    
+    
+@router.post("/delete/{exercise_id}")
+def delete_exercise(exercise_id: int):
+    with Session(engine) as session:
+        exercise = session.get(Exercise, exercise_id)
+        if exercise:
+            session.delete(exercise)
+            session.commit()
+    return RedirectResponse(url="/app", status_code=status.HTTP_303_SEE_OTHER)

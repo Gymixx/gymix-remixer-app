@@ -5,9 +5,10 @@ from typing import Optional
 
 
 class UserUpdate(SQLModel):
-    username: Optional[str]
-    email: Optional[EmailStr]
- 
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[str] = None
+
 class AdminCreate(UserBase):
     role:str = "admin"
 
@@ -16,8 +17,9 @@ class RegularUserCreate(UserBase):
 
 class UserResponse(SQLModel):
     id: int
-    username:str
+    username: str
     email: EmailStr
+    role: str
 
 class SignupRequest(SQLModel):
     username: str
