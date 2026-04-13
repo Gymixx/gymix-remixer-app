@@ -1,68 +1,88 @@
 {% extends "authenticated-base.html" %}
-{% block title %}Tracker{% endblock %}
 
 {% block subpage_content %}
 
 <div class="row mb-4">
     <div class="col">
         <h1>{{ user.username }}'s Tracker</h1>
+        <p class="text-muted">View your completed exercises and workout activity by date.</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12 col-md-6">
+        <form method="get" action="/tracker" class="d-flex gap-2">
+            <input
+                type="date"
+                name="selected_date"
+                value="{{ selected_date }}"
+                class="form-control"
+                required
+            >
+            <button type="submit" class="btn btn-primary">View</button>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12 col-md-6">
+        <div class="card p-3 h-100">
+            <h5 class="mb-2">🔥 Current Streak</h5>
+            <p class="mb-0">{{ streak }} day{% if streak != 1 %}s{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 mt-3 mt-md-0">
+        <div class="card p-3 h-100">
+            <h5 class="mb-2">Workout Status</h5>
+            {% if workout_logged %}
+                <p class="text-success mb-0">Workout logged for this day </p>
+            {% else %}
+                <p class="text-danger mb-0">No workout logged for this day </p>
+            {% endif %}
+        </div>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-12 col-md-8 col-lg-6">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <form method="POST" action="/tracker/add-info/{{ user.id }}">
+    <div class="col-12">
+        <div class="card p-3">
+            <h5 class="mb-3">Completed Exercises for {{ selected_date }}</h5>
 
-                    <div class="row g-3 mb-3">
-                        <div class="col-6">
-                            <label for="age" class="form-label fw-semibold">Age</label>
-                            <input id="age" name="age" type="number" class="form-control" required>
+            {% if completed_exercises %}
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+                    {% for ex in completed_exercises %}
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            {% if ex.image_url %}
+                            <img src="{{ ex.image_url }}" alt="{{ ex.name }}" style="width: 100%; height: 180px; object-fit: cover;">
+                            {% endif %}
+                            <div class="card-body">
+                                <h6 class="card-title">{{ ex.name }}</h6>
+
+                                {% if ex.body_part %}
+                                <p class="mb-1 small text-muted"><strong>Body Part:</strong> {{ ex.body_part }}</p>
+                                {% endif %}
+
+                                {% if ex.target_muscle %}
+                                <p class="mb-1 small text-muted"><strong>Target:</strong> {{ ex.target_muscle }}</p>
+                                {% endif %}
+
+                                {% if ex.equipment %}
+                                <p class="mb-1 small text-muted"><strong>Equipment:</strong> {{ ex.equipment }}</p>
+                                {% endif %}
+
+                                {% if ex.difficulty %}
+                                <p class="mb-0 small text-muted"><strong>Difficulty:</strong> {{ ex.difficulty }}</p>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <label for="gender" class="form-label fw-semibold">Gender</label>
-                            <select id="gender" name="gender" class="form-select" required>
-                                <option value="" disabled selected>Choose gender</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                            </select>
-                        </div>
                     </div>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-6">
-                            <label for="height" class="form-label fw-semibold">Height (cm)</label>
-                            <input id="height" name="height" type="number" step="0.1" class="form-control" required>
-                        </div>
-                        <div class="col-6">
-                            <label for="weight" class="form-label fw-semibold">Weight (kg)</label>
-                            <input id="weight" name="weight" type="number" step="0.1" class="form-control" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="goal" class="form-label fw-semibold">Goal</label>
-                        <input id="goal" name="goal" type="text" class="form-control" required>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="activity_level" class="form-label fw-semibold">Activity Level</label>
-                        <select id="activity_level" name="activity_level" class="form-select" required>
-                            <option value="" disabled selected>What best fits your activity level</option>
-                            <option value="not_really">Not Really (0–1 days a week)</option>
-                            <option value="kinda_active">Kinda Active (2–3 days a week)</option>
-                            <option value="active">Active (4–5 days a week)</option>
-                            <option value="very_active">Very Active (6–7 days a week)</option>
-                        </select>
-                    </div>
-
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-danger px-4">Save</button>
-                    </div>
-
-                </form>
-            </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted mb-0">No exercises completed on this day.</p>
+            {% endif %}
         </div>
     </div>
 </div>

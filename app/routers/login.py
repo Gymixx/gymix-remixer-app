@@ -25,12 +25,27 @@ async def login_action_ajax(
 ):
     user_repo = UserRepository(db)
     auth_service = AuthService(user_repo)
-    access_token =auth_service.authenticate_user(username, password)
-    if not access_token:
+
+    user = user_repo.get_by_username(username)  
+
+    access_token = auth_service.authenticate_user(username, password)
+
+    if not access_token or not user:
         flash(request, "Incorrect username or password", "danger")
-        return RedirectResponse(url=request.url_for("login_view"), status_code=status.HTTP_303_SEE_OTHER)
-    
-    response = RedirectResponse(url=request.url_for("index_view"), status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(
+            url=request.url_for("login_view"),
+            status_code=status.HTTP_303_SEE_OTHER
+        )
+
+    # PROFILE CHECK
+    if not user.age or not user.height or not user.weight or not user.gender or not user.goal or not user.activity_level:
+        response = RedirectResponse(url="/profile", status_code=303)
+    else:
+        response = RedirectResponse(
+            url=request.url_for("index_view"),
+            status_code=status.HTTP_303_SEE_OTHER
+        )
+
     response.set_cookie(
         key="access_token",
         value=access_token,
@@ -38,4 +53,5 @@ async def login_action_ajax(
         samesite="none",
         secure=True,
     )
+
     return response

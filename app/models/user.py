@@ -18,3 +18,6 @@ class User(UserBase, table=True):
     goal: Optional[str] = None
     body_fat_percentage: Optional[float] = None
     age: Optional[int] = None
+    gender: Optional[str] = Field(default=None)
+    activity_level: Optional[str] = Field(default=None)
+    goal: Optional[str] = Field(default=None)

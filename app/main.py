@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI, Request, status
 from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
-from app.routers import templates, static_files, router, api_router
+from app.routers import profile, templates, static_files, router, api_router
 from app.routers import exercise, routine, tracker
 from app.config import get_settings
 from contextlib import asynccontextmanager
@@ -31,6 +31,7 @@ app.include_router(api_router)
 app.include_router(exercise.router)
 app.include_router(routine.router)
 app.include_router(tracker.router)
+app.include_router(profile.router)
 app.mount("/static", static_files, name="static")
 
 @app.exception_handler(status.HTTP_401_UNAUTHORIZED)
