@@ -15,6 +15,7 @@ async def lifespan(app: FastAPI):
     from app.models.routine_exercise import RoutineExercise
     from app.models.workout_log import WorkoutLog
     from app.database import create_db_and_tables
+    from app.models.completed_exercise import CompletedExercise
     create_db_and_tables()
     yield
 

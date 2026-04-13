@@ -1,12 +1,14 @@
 from datetime import date, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Request, Form, status
+from fastapi import APIRouter, Request, Form, Query, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import select
 
 from app.dependencies.auth import AuthDep
 from app.dependencies.session import SessionDep
+from app.models.completed_exercise import CompletedExercise
+from app.models.exercise import Exercise
 from app.models.workout_log import WorkoutLog
 from app.utilities.flash import flash
 from . import templates
@@ -15,11 +17,80 @@ router = APIRouter(prefix="/tracker", tags=["Tracker"])
 
 
 @router.get("", response_class=HTMLResponse)
-async def tracker_page(request: Request, user: AuthDep):
+async def tracker_page(
+    request: Request,
+    user: AuthDep,
+    db: SessionDep,
+    selected_date: date | None = Query(default=None),
+):
+    if selected_date is None:
+        selected_date = date.today()
+
+    completed_logs = db.exec(
+        select(CompletedExercise).where(
+            CompletedExercise.user_id == user.id,
+            CompletedExercise.completed_on == selected_date
+        )
+    ).all()
+
+    completed_exercises = []
+    for log in completed_logs:
+        exercise = db.get(Exercise, log.exercise_id)
+        if exercise:
+            completed_exercises.append({
+                "id": exercise.id,
+                "name": exercise.name,
+                "body_part": exercise.body_part,
+                "target_muscle": exercise.target_muscle,
+                "equipment": exercise.equipment,
+                "difficulty": exercise.difficulty,
+                "image_url": exercise.image_url,
+            })
+
+    workout_logged = db.exec(
+        select(WorkoutLog).where(
+            WorkoutLog.user_id == user.id,
+            WorkoutLog.date == selected_date
+        )
+    ).first()
+
+    logs = db.exec(
+        select(WorkoutLog).where(WorkoutLog.user_id == user.id)
+    ).all()
+
+    dates = sorted([log.date for log in logs], reverse=True)
+
+    if not dates:
+        streak = 0
+    else:
+        streak = 0
+        today = date.today()
+        expected_date = today
+
+        if dates[0] != today:
+            if dates[0] == today - timedelta(days=1):
+                expected_date = today - timedelta(days=1)
+            else:
+                expected_date = None
+
+        if expected_date is not None:
+            for logged_date in dates:
+                if logged_date == expected_date:
+                    streak += 1
+                    expected_date -= timedelta(days=1)
+                elif logged_date < expected_date:
+                    break
+
     return templates.TemplateResponse(
         request=request,
         name="tracker.html",
-        context={"current_user": user}
+        context={
+            "user": user,
+            "selected_date": selected_date,
+            "completed_exercises": completed_exercises,
+            "workout_logged": workout_logged is not None,
+            "streak": streak,
+        }
     )
 
 
@@ -41,7 +112,7 @@ async def handle_tracker(
     print(age, gender, height, weight, goal, activity_level)
     print("BMI:", round(bmi, 2))
 
-    flash(request, f"Saved! Your BMI is {round(bmi, 2)}")
+    flash(request, f"Saved! Your BMI is {round(bmi, 2)}", "success")
 
     return RedirectResponse(url="/tracker", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -59,14 +130,14 @@ async def log_today(request: Request, user: AuthDep, db: SessionDep):
 
     if existing:
         flash(request, "Workout already logged for today!", "warning")
-        return RedirectResponse(url="/app", status_code=303)
+        return RedirectResponse(url="/routines", status_code=303)
 
     log = WorkoutLog(user_id=user.id, date=today)
     db.add(log)
     db.commit()
 
     flash(request, "Workout logged for today!", "success")
-    return RedirectResponse(url="/app", status_code=303)
+    return RedirectResponse(url="/routines", status_code=303)
 
 
 @router.get("/history")
