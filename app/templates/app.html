@@ -42,6 +42,7 @@
 <div class="row mb-4">
     <div class="col-12 col-md-4">
         <form method="get" action="/app" id="filterForm">
+            <input type="hidden" name="search" value="{{ search_query or '' }}">
             <div class="input-group">
                 <select class="form-select" name="target_muscle" id="targetMuscleSelect" aria-label="Filter by target muscle">
                     <option value="">All Muscles</option>
@@ -51,7 +52,7 @@
                 </select>
                 <button class="btn btn-primary" type="submit">Filter</button>
                 {% if selected_target_muscle %}
-                <a href="/app" class="btn btn-outline-secondary">Clear</a>
+                <a href="/app{% if search_query %}?search={{ search_query }}{% endif %}" class="btn btn-outline-secondary">Clear</a>
                 {% endif %}
             </div>
         </form>
@@ -61,10 +62,11 @@
 <div class="row mb-4">
     <div class="col-12 col-md-8">
         <form method="get" action="/app" id="searchForm">
+            <input type="hidden" name="target_muscle" value="{{ selected_target_muscle or '' }}">
             <div class="input-group">
                 <input type="text" class="form-control" name="search" placeholder="Search exercises..." value="{{ search_query or '' }}">
                 <button class="btn btn-primary" type="submit">Search</button>
-                <a href="/app" class="btn btn-outline-secondary">Clear</a>
+                <a href="/app{% if selected_target_muscle %}?target_muscle={{ selected_target_muscle }}{% endif %}" class="btn btn-outline-secondary">Clear</a>
             </div>
         </form>
     </div>

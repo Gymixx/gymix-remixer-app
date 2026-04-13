@@ -205,11 +205,13 @@ async def add_exercise_to_routine(
     user: AuthDep,
     routine_id: int = Form(...),
 ):
+    referer = request.headers.get("referer", "/app")
+
     routine = db.get(Routine, routine_id)
 
     if not routine:
         flash(request, "Please create a routine first!")
-        return RedirectResponse(url="/app", status_code=303)
+        return RedirectResponse(url=referer, status_code=303)
 
     if routine.user_id != user.id:
         return HTMLResponse("Unauthorized", status_code=403)
@@ -223,7 +225,7 @@ async def add_exercise_to_routine(
 
     if existing:
         flash(request, "Exercise already in routine!")
-        return RedirectResponse(url="/app", status_code=303)
+        return RedirectResponse(url=referer, status_code=303)
 
     routine_exercise = RoutineExercise(
         routine_id=routine_id,
@@ -235,7 +237,7 @@ async def add_exercise_to_routine(
     db.commit()
 
     flash(request, "Exercise added to routine!")
-    return RedirectResponse(url="/app", status_code=303)
+    return RedirectResponse(url=referer, status_code=303)
 
 
 @router.post("/{routine_id}/remove-exercise/{routine_exercise_id}")
