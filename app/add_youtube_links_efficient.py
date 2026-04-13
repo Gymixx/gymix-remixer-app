@@ -9,6 +9,9 @@ settings = get_settings()
 YOUTUBE_API_KEY = settings.youtube_api_key
 BATCH_SIZE = 50
 
+if not YOUTUBE_API_KEY:
+    raise RuntimeError("YOUTUBE_API_KEY is not set in your .env file.")
+
 def search_youtube(query):
     youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
     request = youtube.search().list(

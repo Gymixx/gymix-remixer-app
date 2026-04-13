@@ -26,6 +26,7 @@ dependencies = [
     "ruff",
     "sqlmodel",
     "tabulate",
+    "google-api-python-client",
     "requests",
     "typer",
     "uvicorn[standard]",

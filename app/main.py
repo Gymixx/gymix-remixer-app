@@ -5,7 +5,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.routers import templates, static_files, router, api_router
 from app.config import get_settings
 from contextlib import asynccontextmanager
-from app.routers import exercise, routine
+from app.routers import exercise, routine, tracker
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,6 +28,7 @@ app.include_router(router)
 app.include_router(api_router)
 app.include_router(exercise.router)
 app.include_router(routine.router)
+app.include_router(tracker.router)
 app.mount("/static", static_files, name="static")
 
 @app.exception_handler(status.HTTP_401_UNAUTHORIZED)

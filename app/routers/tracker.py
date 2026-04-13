@@ -6,11 +6,13 @@ from app.utilities import flash
 from app.dependencies import AuthDep
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
-from . import tracker, templates
+from . import templates
+
+router = APIRouter(tags=["Tracker"])
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 
-@tracker.get("/tracker", response_class=HTMLResponse)
+@router.get("/tracker", response_class=HTMLResponse)
 async def tracker_page(request: Request, user: AuthDep):
     return templates.TemplateResponse(
         request=request,
@@ -19,7 +21,7 @@ async def tracker_page(request: Request, user: AuthDep):
     )
 
 
-@tracker.post("/tracker")
+@router.post("/tracker")
 async def handle_tracker(
     request: Request,
     age: Annotated[int, Form()],
