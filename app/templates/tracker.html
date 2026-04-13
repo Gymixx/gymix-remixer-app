@@ -2,7 +2,6 @@
 
 {% block additional_styles %}
 <style>
-    /* modern card style */
     .stat-card {
         border: none;
         border-radius: 1.5rem;
@@ -59,6 +58,9 @@
         font-size: 0.7rem;
         font-weight: 500;
     }
+    .chart-container {
+        max-height: 300px;
+    }
 </style>
 {% endblock %}
 
@@ -67,7 +69,7 @@
 <div class="row mb-5">
     <div class="col">
         <h1 class="fw-bold">{{ user.username }}'s Tracker</h1>
-        <p class="text-muted">Monitor your workouts, streaks and weekly progress.</p>
+        <p class="text-muted">Monitor your workouts, streaks, and calorie intake.</p>
     </div>
 </div>
 
@@ -146,6 +148,45 @@
     </div>
 </div>
 
+<!-- Two-column layout: Chart + Calorie Card -->
+<div class="row mb-5">
+    <div class="col-md-7">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="fw-semibold mb-3">📊 Workout Frequency – Last 30 Days</h5>
+            <div class="chart-container">
+                <canvas id="workoutChart"></canvas>
+            </div>
+            <p class="text-muted small mt-3">Each bar shows whether you worked out (1) or not (0).</p>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="fw-semibold mb-3">🍽️ Daily Calorie Log</h5>
+            <form method="post" action="/tracker/save-calories" class="mt-2">
+                <input type="hidden" name="date" value="{{ selected_date }}">
+                <div class="mb-3">
+                    <label class="form-label">Calories for {{ selected_date }}</label>
+                    <div class="input-group">
+                        <input type="number" name="calories" class="form-control" value="{{ current_calories or '' }}" placeholder="e.g., 2200" required>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </form>
+            {% if current_calories %}
+                <div class="mt-3 p-3 bg-light rounded-3">
+                    <p class="mb-0 fw-semibold">Today's total: <span class="text-primary">{{ current_calories }}</span> kcal</p>
+                    <small class="text-muted">💡 A typical daily goal is around 2000–2500 kcal.</small>
+                </div>
+            {% else %}
+                <div class="mt-3 p-3 bg-light rounded-3">
+                    <p class="mb-0 text-muted">No calories logged for this day yet.</p>
+                    <small class="text-muted">Use the form above to track your intake.</small>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
 <!-- Activity log (last 7 days) -->
 <div class="row mb-5">
     <div class="col-12">
@@ -211,4 +252,73 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block external_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('workoutChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_labels | tojson }},
+                datasets: [{
+                    label: 'Workout completed',
+                    data: {{ chart_data | tojson }},
+                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                    borderColor: 'rgb(5, 150, 105)',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    barPercentage: 0.6,
+                    categoryPercentage: 0.8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(val) {
+                                return val === 1 ? 'Yes' : 'No';
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Workout logged?'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            autoSkip: true,
+                            maxTicksLimit: 10
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw === 1 ? 'Workout completed' : 'No workout';
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

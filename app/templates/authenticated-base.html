@@ -77,15 +77,23 @@
                     <span class="material-symbols-outlined me-2">Exercise</span>
                     Exercises
                 </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link d-flex align-items-center {{ 'active' if request.path == '/routines' }}" href="/routines">
                     <span class="material-symbols-outlined me-2">fitness_center</span>
                     Routines
                 </a>
             </li>
-            </li>
-               <a class="nav-link d-flex align-items-center {{ 'active' if request.path == '/tracker' }}" href="/tracker">
-                    <span class="material-symbols-outlined">track_changes</span>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center {{ 'active' if request.path == '/tracker' }}" href="/tracker">
+                    <span class="material-symbols-outlined me-2">track_changes</span>
                     Tracker
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center {{ 'active' if request.path == '/chat' }}" href="/chat">
+                    <span class="material-symbols-outlined me-2">smart_toy</span>
+                    AI Assistant
                 </a>
             </li>
 
