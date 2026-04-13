@@ -52,32 +52,54 @@
         <div class="row g-0">
             <div class="col-lg-6 d-none d-lg-flex login-image">
                 <div class="text-center">
-                    <h2 class="mt-4 fw-bold">Registration</h2>
-                    <p class="lead">Create an account for the app</p>
+                    <h2 class="mt-4 fw-bold">Let's Do This</h2>
+                    <p class="lead">Create an account to begin</p>
                 </div>
             </div>
             <div class="col-lg-6 bg-white">
                 <div class="form-section">
-                    <h3 class="fw-bold mb-4">Register</h3>
+                    <h3 class="fw-bold mb-4">Register Here</h3>
 
-                    <form id="signUpForm" method="POST">
+                    <form id="registrationForm" method="POST">
                         <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control form-control-md" id="username" name="username"
-                                required="required">
+                            <div class="input-field col s12">
+                            <label>First Name</label>
+                            <input name="first_name" type="text" class="form-control" required>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label for="username" class="form-label">Email</label>
-                            <input type="email" class="form-control form-control-md" id="email" name="email"
-                                required="required">
+                            <div class="input-field col s12">
+                            <label>Last Name</label>
+                            <input name="last_name" type="text" class="form-control" required>
+                            </div>
                         </div>
-
                         <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control form-control-md" id="password" name="password"
-                                required>
+                            <div class="input-field col s12">
+                            <label> Username</label>
+                            <input name="username" type="text" class="form-control" required>
+                            </div>
                         </div>
-
+                         <div class="mb-3">
+                                <div class="input-field col s12">
+                                    <label>Password</label>
+                                    <input name="password" type="password" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="input-field col s12">
+                                <label>Confirm Password</label>
+                                <input name="confirm_password" id="confirm_password" type="password"  class="form-control" required>
+                                <span id="passwordMatchError" style="color:red; font-size:0.9em;"></span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="input-field col s12">
+                                <label>Email Address</label>
+                                <br>
+                                <input name="email" type="email" class="form-control" required>
+            
+                            </div>
+                        </div>
                         <div class="d-grid mb-3">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 Register
@@ -100,4 +122,15 @@
         </div>
     </div>
 </div>
+<script>
+document.getElementById("registrationForm").addEventListener("submit", function(e) {
+    let password = document.querySelector('input[name="password"]').value;
+    let confirm = document.getElementById("confirm_password").value;
+
+    if (password !== confirm) {
+        e.preventDefault();
+        document.getElementById("passwordMatchError").textContent = "Please ensure both passwords match!";
+    }
+});
+</script>
 {% endblock %}
