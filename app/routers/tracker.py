@@ -1,10 +1,9 @@
 from datetime import date, timedelta
 from typing import Annotated
-
 from fastapi import APIRouter, Request, Form, Query, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import select
-
+from app.models.user import User
 from app.dependencies.auth import AuthDep
 from app.dependencies.session import SessionDep
 from app.models.completed_exercise import CompletedExercise
@@ -93,10 +92,10 @@ async def tracker_page(
         }
     )
 
-
-@router.post("")
-async def handle_tracker(
+@router.post("/add-info/{user_id}")
+async def add_tracker_info(
     request: Request,
+    user_id: int,
     age: Annotated[int, Form()],
     gender: Annotated[str, Form()],
     height: Annotated[float, Form()],
@@ -104,15 +103,23 @@ async def handle_tracker(
     goal: Annotated[str, Form()],
     activity_level: Annotated[str, Form()],
     user: AuthDep,
-    db: SessionDep
+    db: SessionDep,
 ):
+    db_user = db.get(User, user_id)
+
+    db_user.age = age
+    db_user.gender = gender
+    db_user.height = height
+    db_user.weight = weight
+    db_user.goal = goal
+    db_user.activity_level = activity_level
+    
     bmi = weight / ((height / 100) ** 2)
-
-    print("Tracker Data:")
-    print(age, gender, height, weight, goal, activity_level)
-    print("BMI:", round(bmi, 2))
-
-    flash(request, f"Saved! Your BMI is {round(bmi, 2)}", "success")
+    db_user.body_fat_percentage = round(bmi, 2)
+    
+    flash(request, f"Info saved! Your BMI is {round(bmi, 2)}", "success")
+    db.add(db_user)
+    db.commit()
 
     return RedirectResponse(url="/tracker", status_code=status.HTTP_303_SEE_OTHER)
 

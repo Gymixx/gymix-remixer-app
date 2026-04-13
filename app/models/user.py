@@ -13,5 +13,8 @@ class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     weight: Optional[float] = None
     height: Optional[float] = None
+    gender: Optional[str] = None
+    activity_level: Optional[str] = None
+    goal: Optional[str] = None
     body_fat_percentage: Optional[float] = None
     age: Optional[int] = None

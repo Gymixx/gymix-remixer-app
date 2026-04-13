@@ -7,6 +7,8 @@ from app.models.exercise import Exercise
 from app.models.user import User
 from app.models.routine import Routine
 from app.models.routine_exercise import RoutineExercise
+from app.models.workout_log import WorkoutLog
+from app.models.completed_exercise import CompletedExercise
 from app.utilities.security import encrypt_password
 
 cli = typer.Typer()
