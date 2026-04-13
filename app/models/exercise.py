@@ -19,3 +19,4 @@ class Exercise(SQLModel, table=True):
     exercise_type: Optional[str] = None
     instructions: Optional[str] = None
     
+    youtube_url: Optional[str] = Field(default=None, nullable=True)
