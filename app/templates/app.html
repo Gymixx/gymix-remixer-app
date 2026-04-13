@@ -95,7 +95,8 @@
                         data-bs-toggle="modal"
                         data-bs-target="#exerciseModal"
                         data-name="{{ exercise.name }}"
-                        data-instructions="{{ exercise.instructions or 'No instructions available.' }}">
+                        data-instructions="{{ exercise.instructions or 'No instructions available.' }}"
+                        data-youtube-url="{{ exercise.youtube_url or '' }}">
                         View
                     </button>
                     <button
@@ -168,14 +169,20 @@
         </div>
     </div>
 
+    <!-- MODAL WITH YOUTUBE EMBED -->
     <div class="modal fade" id="exerciseModal" tabindex="-1" aria-labelledby="exerciseModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exerciseModalLabel"></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <!-- YouTube video container (hidden if no URL) -->
+                    <div id="youtubeContainer" class="mb-3 ratio ratio-16x9" style="display: none;">
+                        <iframe id="youtubeIframe" src="" title="YouTube video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    <h6>Instructions</h6>
                     <p id="exerciseModalInstructions"></p>
                 </div>
             </div>
@@ -188,8 +195,30 @@
 <script>
     document.getElementById('exerciseModal').addEventListener('show.bs.modal', function (e) {
         const btn = e.relatedTarget;
-        document.getElementById('exerciseModalLabel').textContent = btn.dataset.name;
-        document.getElementById('exerciseModalInstructions').textContent = btn.dataset.instructions;
+        const name = btn.dataset.name;
+        const instructions = btn.dataset.instructions;
+        const youtubeUrl = btn.dataset.youtubeUrl || null;
+
+        document.getElementById('exerciseModalLabel').textContent = name;
+        document.getElementById('exerciseModalInstructions').innerHTML = instructions.replace(/\n/g, "<br>");
+
+        const youtubeContainer = document.getElementById('youtubeContainer');
+        const youtubeIframe = document.getElementById('youtubeIframe');
+        if (youtubeUrl && youtubeUrl.trim() !== "") {
+            // Convert YouTube URL to embed format
+            let embedUrl = youtubeUrl;
+            if (youtubeUrl.includes("watch?v=")) {
+                embedUrl = youtubeUrl.replace("watch?v=", "embed/");
+            } else if (youtubeUrl.includes("youtu.be/")) {
+                const videoId = youtubeUrl.split("youtu.be/")[1].split("?")[0];
+                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            }
+            youtubeIframe.src = embedUrl;
+            youtubeContainer.style.display = "block";
+        } else {
+            youtubeIframe.src = "";
+            youtubeContainer.style.display = "none";
+        }
     });
 
    // This handles the modal for adding exercise

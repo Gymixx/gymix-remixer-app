@@ -84,7 +84,7 @@ def seed_exercises():
         return
 
     if not isinstance(data, list):
-        print("Unexpected API response format.")
+        print("Unexpected API response python cli.py seed-exercisesformat.")
         return
 
     inserted = 0
