@@ -3,9 +3,9 @@ from fastapi import FastAPI, Request, status
 from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
 from app.routers import templates, static_files, router, api_router
+from app.routers import exercise, routine, tracker
 from app.config import get_settings
 from contextlib import asynccontextmanager
-from app.routers import exercise, routine, tracker
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -13,6 +13,7 @@ async def lifespan(app: FastAPI):
     from app.models.exercise import Exercise
     from app.models.routine import Routine
     from app.models.routine_exercise import RoutineExercise
+    from app.models.workout_log import WorkoutLog
     from app.database import create_db_and_tables
     create_db_and_tables()
     yield
