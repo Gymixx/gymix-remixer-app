@@ -1,79 +1,203 @@
 {% extends "authenticated-base.html" %}
 
+{% block additional_styles %}
+<style>
+    /* modern card style */
+    .stat-card {
+        border: none;
+        border-radius: 1.5rem;
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 32px rgba(0,0,0,0.1);
+    }
+    .activity-day {
+        text-align: center;
+        padding: 0.7rem 0.2rem;
+        border-radius: 1rem;
+        background-color: #f1f5f9;
+        transition: all 0.2s;
+    }
+    .activity-day.workout-day {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        box-shadow: 0 4px 10px rgba(16,185,129,0.3);
+    }
+    .activity-day .day-name {
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    .activity-day .day-date {
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    .progress-custom {
+        height: 12px;
+        border-radius: 20px;
+        background-color: #e2e8f0;
+    }
+    .progress-bar-custom {
+        background: linear-gradient(90deg, #10b981, #3b82f6);
+        border-radius: 20px;
+    }
+    .exercise-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .exercise-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    }
+    .badge-custom {
+        background-color: #eef2ff;
+        color: #1e3a8a;
+        padding: 0.25rem 0.75rem;
+        border-radius: 2rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
 {% block subpage_content %}
 
-<div class="row mb-4">
+<div class="row mb-5">
     <div class="col">
-        <h1>{{ user.username }}'s Tracker</h1>
-        <p class="text-muted">View your completed exercises and workout activity by date.</p>
+        <h1 class="fw-bold">{{ user.username }}'s Tracker</h1>
+        <p class="text-muted">Monitor your workouts, streaks and weekly progress.</p>
     </div>
 </div>
 
+<!-- Date picker -->
 <div class="row mb-4">
-    <div class="col-12 col-md-6">
+    <div class="col-md-5">
         <form method="get" action="/tracker" class="d-flex gap-2">
-            <input
-                type="date"
-                name="selected_date"
-                value="{{ selected_date }}"
-                class="form-control"
-                required
-            >
-            <button type="submit" class="btn btn-primary">View</button>
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                    <span class="material-symbols-outlined">calendar_today</span>
+                </span>
+                <input type="date" name="selected_date" value="{{ selected_date }}" class="form-control border-start-0" required>
+                <button type="submit" class="btn btn-primary px-4">View</button>
+            </div>
         </form>
     </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-12 col-md-6">
-        <div class="card p-3 h-100">
-            <h5 class="mb-2">🔥 Current Streak</h5>
-            <p class="mb-0">{{ streak }} day{% if streak != 1 %}s{% endif %}</p>
+<!-- Two key stats -->
+<div class="row g-4 mb-5">
+    <div class="col-md-6">
+        <div class="stat-card p-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <p class="text-muted mb-1">Current Streak</p>
+                    <h2 class="fw-bold mb-0">{{ streak }}</h2>
+                    <small class="text-muted">day{% if streak != 1 %}s{% endif %}</small>
+                </div>
+                <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
+                    <span class="material-symbols-outlined" style="font-size: 2.2rem; color: #f97316;">local_fire_department</span>
+                </div>
+            </div>
         </div>
     </div>
+    <div class="col-md-6">
+        <div class="stat-card p-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <p class="text-muted mb-1">Workout Status</p>
+                    <h4 class="fw-semibold mb-0">
+                        {% if workout_logged %}
+                            <span class="text-success">✓ Logged</span>
+                        {% else %}
+                            <span class="text-danger">✗ Not logged</span>
+                        {% endif %}
+                    </h4>
+                    <small class="text-muted">for {{ selected_date }}</small>
+                </div>
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
+                    <span class="material-symbols-outlined" style="font-size: 2.2rem; {% if workout_logged %}color: #10b981;{% else %}color: #ef4444;{% endif %}">
+                        {% if workout_logged %}fitness_center{% else %}schedule{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <div class="col-12 col-md-6 mt-3 mt-md-0">
-        <div class="card p-3 h-100">
-            <h5 class="mb-2">Workout Status</h5>
-            {% if workout_logged %}
-                <p class="text-success mb-0">Workout logged for this day </p>
+<!-- Weekly goal progress -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm p-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="fw-semibold mb-0">🎯 Weekly Goal Progress</h5>
+                <span class="badge-custom">{{ workouts_this_week }} / {{ weekly_target }} workouts</span>
+            </div>
+            <div class="progress progress-custom w-100 mb-2">
+                <div class="progress-bar progress-bar-custom" role="progressbar" style="width: {{ weekly_progress_percent }}%;" aria-valuenow="{{ weekly_progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            {% if workouts_this_week >= weekly_target %}
+                <p class="text-success mb-0 small">🎉 Amazing! You've hit your weekly goal. Keep building momentum.</p>
             {% else %}
-                <p class="text-danger mb-0">No workout logged for this day </p>
+                <p class="text-muted mb-0 small">{{ weekly_target - workouts_this_week }} more workout(s) to reach your weekly target.</p>
             {% endif %}
         </div>
     </div>
 </div>
 
+<!-- Activity log (last 7 days) -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm p-4">
+            <h5 class="fw-semibold mb-3">📅 7‑Day Activity Log</h5>
+            <div class="row row-cols-7 g-2">
+                {% for day in activity_log %}
+                <div class="col">
+                    <div class="activity-day {% if day.has_workout %}workout-day{% endif %}">
+                        <div class="day-name">{{ day.day_name }}</div>
+                        <div class="day-date">{{ day.date.strftime('%m/%d') }}</div>
+                        <div class="mt-1">
+                            {% if day.has_workout %}
+                                <span class="material-symbols-outlined" style="font-size: 1.2rem;">check_circle</span>
+                            {% else %}
+                                <span class="material-symbols-outlined" style="font-size: 1.2rem;">circle</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="mt-3 small text-muted d-flex gap-3">
+                <span><span class="text-success">●</span> Workout completed</span>
+                <span><span class="text-secondary">○</span> No workout</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Completed exercises for selected date -->
 <div class="row">
     <div class="col-12">
-        <div class="card p-3">
-            <h5 class="mb-3">Completed Exercises for {{ selected_date }}</h5>
-
+        <div class="card border-0 shadow-sm p-4">
+            <h5 class="fw-semibold mb-3">✅ Exercises Completed on {{ selected_date }}</h5>
             {% if completed_exercises %}
-                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
                     {% for ex in completed_exercises %}
                     <div class="col">
-                        <div class="card h-100 shadow-sm">
+                        <div class="card exercise-card h-100 border-0 shadow-sm">
                             {% if ex.image_url %}
-                            <img src="{{ ex.image_url }}" alt="{{ ex.name }}" style="width: 100%; height: 180px; object-fit: cover;">
+                            <img src="{{ ex.image_url }}" alt="{{ ex.name }}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 1rem 1rem 0 0;">
                             {% endif %}
                             <div class="card-body">
-                                <h6 class="card-title">{{ ex.name }}</h6>
-
-                                {% if ex.body_part %}
-                                <p class="mb-1 small text-muted"><strong>Body Part:</strong> {{ ex.body_part }}</p>
-                                {% endif %}
-
-                                {% if ex.target_muscle %}
-                                <p class="mb-1 small text-muted"><strong>Target:</strong> {{ ex.target_muscle }}</p>
-                                {% endif %}
-
+                                <h6 class="card-title fw-bold">{{ ex.name }}</h6>
+                                <div class="d-flex flex-wrap gap-1 mb-2">
+                                    {% if ex.body_part %}<span class="badge bg-secondary bg-opacity-10 text-dark small">{{ ex.body_part }}</span>{% endif %}
+                                    {% if ex.target_muscle %}<span class="badge bg-success bg-opacity-10 text-success small">{{ ex.target_muscle }}</span>{% endif %}
+                                    {% if ex.difficulty %}<span class="badge bg-warning bg-opacity-10 text-warning small">{{ ex.difficulty }}</span>{% endif %}
+                                </div>
                                 {% if ex.equipment %}
-                                <p class="mb-1 small text-muted"><strong>Equipment:</strong> {{ ex.equipment }}</p>
-                                {% endif %}
-
-                                {% if ex.difficulty %}
-                                <p class="mb-0 small text-muted"><strong>Difficulty:</strong> {{ ex.difficulty }}</p>
+                                <p class="mb-0 small text-muted"><span class="material-symbols-outlined" style="font-size: 0.9rem;">fitness_center</span> {{ ex.equipment }}</p>
                                 {% endif %}
                             </div>
                         </div>
@@ -81,7 +205,7 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="text-muted mb-0">No exercises completed on this day.</p>
+                <p class="text-muted mb-0">No exercises recorded for this day. Get moving!</p>
             {% endif %}
         </div>
     </div>

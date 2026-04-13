@@ -2,7 +2,7 @@ from datetime import date, timedelta
 from typing import Annotated
 from fastapi import APIRouter, Request, Form, Query, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlmodel import select
+from sqlmodel import select, func
 from app.models.user import User
 from app.dependencies.auth import AuthDep
 from app.dependencies.session import SessionDep
@@ -25,6 +25,7 @@ async def tracker_page(
     if selected_date is None:
         selected_date = date.today()
 
+    # Completed exercises for selected date
     completed_logs = db.exec(
         select(CompletedExercise).where(
             CompletedExercise.user_id == user.id,
@@ -46,6 +47,7 @@ async def tracker_page(
                 "image_url": exercise.image_url,
             })
 
+    # Check if workout logged for selected date
     workout_logged = db.exec(
         select(WorkoutLog).where(
             WorkoutLog.user_id == user.id,
@@ -53,25 +55,24 @@ async def tracker_page(
         )
     ).first()
 
+    # All workout logs for streak calculation
     logs = db.exec(
         select(WorkoutLog).where(WorkoutLog.user_id == user.id)
     ).all()
-
     dates = sorted([log.date for log in logs], reverse=True)
 
+    # Streak calculation
     if not dates:
         streak = 0
     else:
         streak = 0
         today = date.today()
         expected_date = today
-
         if dates[0] != today:
             if dates[0] == today - timedelta(days=1):
                 expected_date = today - timedelta(days=1)
             else:
                 expected_date = None
-
         if expected_date is not None:
             for logged_date in dates:
                 if logged_date == expected_date:
@@ -79,6 +80,29 @@ async def tracker_page(
                     expected_date -= timedelta(days=1)
                 elif logged_date < expected_date:
                     break
+
+    # --- Activity log for last 7 days ---
+    last_7_days = [(date.today() - timedelta(days=i)) for i in range(7)]
+    activity_log = []
+    for d in last_7_days:
+        has_log = any(log.date == d for log in logs)
+        activity_log.append({
+            "date": d,
+            "has_workout": has_log,
+            "day_name": d.strftime("%a"),
+            "date_str": d.isoformat()
+        })
+    # Reverse to show oldest first
+    activity_log.reverse()
+
+    # --- Goal progress (weekly workout target) ---
+    weekly_target = 3
+    # Get start of week
+    today = date.today()
+    start_of_week = today - timedelta(days=today.weekday())
+    workouts_this_week = sum(1 for log in logs if start_of_week <= log.date <= today)
+    weekly_progress_percent = int((workouts_this_week / weekly_target) * 100) if weekly_target else 0
+    weekly_progress_percent = min(weekly_progress_percent, 100)  
 
     return templates.TemplateResponse(
         request=request,
@@ -89,8 +113,13 @@ async def tracker_page(
             "completed_exercises": completed_exercises,
             "workout_logged": workout_logged is not None,
             "streak": streak,
+            "activity_log": activity_log,
+            "workouts_this_week": workouts_this_week,
+            "weekly_target": weekly_target,
+            "weekly_progress_percent": weekly_progress_percent,
         }
     )
+
 
 @router.post("/add-info/{user_id}")
 async def add_tracker_info(
@@ -106,7 +135,6 @@ async def add_tracker_info(
     db: SessionDep,
 ):
     db_user = db.get(User, user_id)
-
     db_user.age = age
     db_user.gender = gender
     db_user.height = height
@@ -120,21 +148,18 @@ async def add_tracker_info(
     flash(request, f"Info saved! Your BMI is {round(bmi, 2)}", "success")
     db.add(db_user)
     db.commit()
-
     return RedirectResponse(url="/tracker", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/log-today")
 async def log_today(request: Request, user: AuthDep, db: SessionDep):
     today = date.today()
-
     existing = db.exec(
         select(WorkoutLog).where(
             (WorkoutLog.user_id == user.id) &
             (WorkoutLog.date == today)
         )
     ).first()
-
     if existing:
         flash(request, "Workout already logged for today!", "warning")
         return RedirectResponse(url="/routines", status_code=303)
@@ -142,46 +167,34 @@ async def log_today(request: Request, user: AuthDep, db: SessionDep):
     log = WorkoutLog(user_id=user.id, date=today)
     db.add(log)
     db.commit()
-
     flash(request, "Workout logged for today!", "success")
     return RedirectResponse(url="/routines", status_code=303)
 
 
 @router.get("/history")
 async def get_history(user: AuthDep, db: SessionDep):
-    logs = db.exec(
-        select(WorkoutLog).where(WorkoutLog.user_id == user.id)
-    ).all()
-
+    logs = db.exec(select(WorkoutLog).where(WorkoutLog.user_id == user.id)).all()
     return logs
 
 
 @router.get("/streak")
 async def get_streak(user: AuthDep, db: SessionDep):
-    logs = db.exec(
-        select(WorkoutLog).where(WorkoutLog.user_id == user.id)
-    ).all()
-
+    logs = db.exec(select(WorkoutLog).where(WorkoutLog.user_id == user.id)).all()
     dates = sorted([log.date for log in logs], reverse=True)
-
     if not dates:
         return {"current_streak": 0}
-
     streak = 0
     today = date.today()
     expected_date = today
-
     if dates[0] != today:
         if dates[0] == today - timedelta(days=1):
             expected_date = today - timedelta(days=1)
         else:
             return {"current_streak": 0}
-
     for logged_date in dates:
         if logged_date == expected_date:
             streak += 1
             expected_date -= timedelta(days=1)
         elif logged_date < expected_date:
             break
-
     return {"current_streak": streak}
