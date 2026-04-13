@@ -18,6 +18,7 @@ async def user_home_view(
     db: SessionDep,
     page: int = Query(default=1, ge=1),
     target_muscle: str | None = Query(default=None),
+    search: str | None = Query(default=None),
 ):
     all_for_filter = db.exec(select(Exercise)).all()
     target_muscles = sorted({e.target_muscle for e in all_for_filter if e.target_muscle})
@@ -25,6 +26,8 @@ async def user_home_view(
     statement = select(Exercise)
     if target_muscle:
         statement = statement.where(Exercise.target_muscle.contains(target_muscle))
+    if search:
+        statement = statement.where(Exercise.name.contains(search))
     all_exercises = db.exec(statement).all()
     total_count = len(all_exercises)
 
@@ -45,5 +48,6 @@ async def user_home_view(
             "routines": routines,
             "target_muscles": target_muscles,
             "selected_target_muscle": target_muscle,
+            "search_query": search,
         }
     )
