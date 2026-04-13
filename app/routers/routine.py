@@ -208,7 +208,8 @@ async def add_exercise_to_routine(
     routine = db.get(Routine, routine_id)
 
     if not routine:
-        return HTMLResponse("Routine not found", status_code=404)
+        flash(request, "Please create a routine first!")
+        return RedirectResponse(url="/app", status_code=303)
 
     if routine.user_id != user.id:
         return HTMLResponse("Unauthorized", status_code=403)
@@ -221,7 +222,7 @@ async def add_exercise_to_routine(
     ).first()
 
     if existing:
-        flash(request, "Exercise already in routine!", "warning")
+        flash(request, "Exercise already in routine!")
         return RedirectResponse(url="/app", status_code=303)
 
     routine_exercise = RoutineExercise(
@@ -233,7 +234,7 @@ async def add_exercise_to_routine(
     db.add(routine_exercise)
     db.commit()
 
-    flash(request, "Exercise added to routine!", "success")
+    flash(request, "Exercise added to routine!")
     return RedirectResponse(url="/app", status_code=303)
 
 
@@ -261,7 +262,7 @@ async def remove_exercise_from_routine(
     db.delete(routine_exercise)
     db.commit()
 
-    flash(request, "Exercise removed from routine!", "success")
+    flash(request, "Exercise removed from routine!")
     return RedirectResponse(url=f"/routines/{routine_id}", status_code=303)
 
 
@@ -309,3 +310,8 @@ async def toggle_exercise_completion(
 
     flash(request, "Exercise completed!", "success")
     return RedirectResponse(url="/routines", status_code=303)
+
+@router.post("/no-routine")
+async def no_routine(request: Request):
+    flash(request, "Please create a routine first, before adding exercises!")
+    return RedirectResponse(url="/app", status_code=303)
