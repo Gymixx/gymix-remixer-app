@@ -2,18 +2,20 @@ from datetime import date, timedelta
 from typing import Annotated
 from fastapi import APIRouter, Request, Form, Query, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlmodel import select, func
+from sqlmodel import select
 from app.models.user import User
 from app.dependencies.auth import AuthDep
 from app.dependencies.session import SessionDep
 from app.models.completed_exercise import CompletedExercise
 from app.models.exercise import Exercise
 from app.models.workout_log import WorkoutLog
+from app.models.calorie_log import CalorieLog
 from app.utilities.flash import flash
 from . import templates
 
 router = APIRouter(prefix="/tracker", tags=["Tracker"])
 
+WEEKLY_GOAL = 3
 
 @router.get("", response_class=HTMLResponse)
 async def tracker_page(
@@ -55,7 +57,7 @@ async def tracker_page(
         )
     ).first()
 
-    # All workout logs for streak calculation
+    # All workout logs
     logs = db.exec(
         select(WorkoutLog).where(WorkoutLog.user_id == user.id)
     ).all()
@@ -81,7 +83,7 @@ async def tracker_page(
                 elif logged_date < expected_date:
                     break
 
-    # --- Activity log for last 7 days ---
+    # Activity log for last 7 days
     last_7_days = [(date.today() - timedelta(days=i)) for i in range(7)]
     activity_log = []
     for d in last_7_days:
@@ -92,17 +94,31 @@ async def tracker_page(
             "day_name": d.strftime("%a"),
             "date_str": d.isoformat()
         })
-    # Reverse to show oldest first
     activity_log.reverse()
 
-    # --- Goal progress (weekly workout target) ---
-    weekly_target = 3
-    # Get start of week
+    # Data for 30-day chart
+    chart_labels = []
+    chart_data = []
     today = date.today()
+    for i in range(29, -1, -1):
+        day = today - timedelta(days=i)
+        has_workout = any(log.date == day for log in logs)
+        chart_labels.append(day.strftime("%d %b"))
+        chart_data.append(1 if has_workout else 0)
+
+    # Weekly progress
     start_of_week = today - timedelta(days=today.weekday())
     workouts_this_week = sum(1 for log in logs if start_of_week <= log.date <= today)
-    weekly_progress_percent = int((workouts_this_week / weekly_target) * 100) if weekly_target else 0
-    weekly_progress_percent = min(weekly_progress_percent, 100)  
+    weekly_progress_percent = min(int((workouts_this_week / WEEKLY_GOAL) * 100), 100)
+
+    # Calorie log for selected date 
+    calorie_log = db.exec(
+        select(CalorieLog).where(
+            CalorieLog.user_id == user.id,
+            CalorieLog.log_date == selected_date
+        )
+    ).first()
+    current_calories = calorie_log.calories if calorie_log else None
 
     return templates.TemplateResponse(
         request=request,
@@ -115,8 +131,11 @@ async def tracker_page(
             "streak": streak,
             "activity_log": activity_log,
             "workouts_this_week": workouts_this_week,
-            "weekly_target": weekly_target,
+            "weekly_target": WEEKLY_GOAL,
             "weekly_progress_percent": weekly_progress_percent,
+            "chart_labels": chart_labels,
+            "chart_data": chart_data,
+            "current_calories": current_calories,
         }
     )
 
@@ -169,6 +188,31 @@ async def log_today(request: Request, user: AuthDep, db: SessionDep):
     db.commit()
     flash(request, "Workout logged for today!", "success")
     return RedirectResponse(url="/routines", status_code=303)
+
+
+@router.post("/save-calories")
+async def save_calories(
+    request: Request,
+    user: AuthDep,
+    db: SessionDep,
+    date: date = Form(...),
+    calories: int = Form(...),
+):
+    existing = db.exec(
+        select(CalorieLog).where(
+            CalorieLog.user_id == user.id,
+            CalorieLog.log_date == date   
+        )
+    ).first()
+    if existing:
+        existing.calories = calories
+        db.add(existing)
+    else:
+        new_log = CalorieLog(user_id=user.id, log_date=date, calories=calories) 
+        db.add(new_log)
+    db.commit()
+    flash(request, f"Calories for {date} saved: {calories} kcal", "success")
+    return RedirectResponse(url=f"/tracker?selected_date={date}", status_code=303)
 
 
 @router.get("/history")
