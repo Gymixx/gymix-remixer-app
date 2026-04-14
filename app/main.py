@@ -1,3 +1,4 @@
+import requests
 import uvicorn
 from fastapi import FastAPI, Request, status
 from starlette.middleware import Middleware
@@ -8,6 +9,9 @@ from app.api.chat import router as chat_api_router
 from app.views.chat import router as chat_view_router
 from app.config import get_settings
 from contextlib import asynccontextmanager
+
+API_URL = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json"
+IMAGE_BASE_URL = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/"
 
 
 @asynccontextmanager
@@ -51,6 +55,43 @@ async def lifespan(app: FastAPI):
                 role="admin"
             )
             db.add(bob2)
+
+        existing_exercise = db.exec(select(Exercise)).first()
+
+        if not existing_exercise:
+            try:
+                response = requests.get(API_URL, timeout=60)
+                response.raise_for_status()
+                data = response.json()
+
+                if isinstance(data, list):
+                    for item in data:
+                        exercise_id = item.get("id")
+                        if not exercise_id:
+                            continue
+
+                        images = item.get("images", [])
+                        image_url = IMAGE_BASE_URL + images[0] if images else None
+
+                        exercise = Exercise(
+                            exercise_id=exercise_id,
+                            name=item.get("name", "").strip(),
+                            image_url=image_url,
+                            gif_url=None,
+                            body_part=item.get("category"),
+                            target_muscle=", ".join(item.get("primaryMuscles", [])) if item.get("primaryMuscles") else None,
+                            secondary_muscle=", ".join(item.get("secondaryMuscles", [])) if item.get("secondaryMuscles") else None,
+                            equipment=item.get("equipment"),
+                            difficulty=item.get("level"),
+                            exercise_type=item.get("mechanic"),
+                            overview=None,
+                            instructions="\n".join(item.get("instructions", [])) if item.get("instructions") else None,
+                            related_exercise_ids=None,
+                        )
+                        db.add(exercise)
+
+            except requests.RequestException as e:
+                print(f"Error seeding exercises: {e}")
 
         db.commit()
 
