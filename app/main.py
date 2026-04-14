@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
                 username="bob",
                 email="bob@mail.com",
                 password=encrypt_password("bobpass"),
-                role="user"
+                role="admin"
             )
             db.add(bob)
 
@@ -52,7 +52,7 @@ async def lifespan(app: FastAPI):
                 username="bob2",
                 email="bob2@mail.com",
                 password=encrypt_password("bob2pass"),
-                role="admin"
+                role="user"
             )
             db.add(bob2)
 
