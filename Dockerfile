@@ -6,12 +6,11 @@ RUN apt-get update \
 
 COPY ./pyproject.toml ./
 COPY ./README.md ./
-COPY ./app /app
+COPY ./app ./app       
 
 RUN pip install .
 
-WORKDIR /app
-
+WORKDIR /                
 ENTRYPOINT ["python"]
 
 CMD ["-m", "app.main"]
