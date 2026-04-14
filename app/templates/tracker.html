@@ -167,7 +167,7 @@
                 <div class="mb-3">
                     <label class="form-label">Calories for {{ selected_date }}</label>
                     <div class="input-group">
-                        <input type="number" name="calories" class="form-control" value="{{ current_calories or '' }}" placeholder="e.g., 2200" required>
+                        <input type="number" name="calories" class="form-control" value="{{ current_calories or '' }}" placeholder="e.g., 2200" min="1" required>
                         <button type="submit" class="btn btn-primary">Save</button>
                     </div>
                 </div>
