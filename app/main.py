@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
     from app.models.workout_log import WorkoutLog
     from app.models.completed_exercise import CompletedExercise
     from app.models.calorie_log import CalorieLog
-    from app.utilities import encrypt_password
+    from app.utilities.security import encrypt_password
 
     create_db_and_tables()
 
